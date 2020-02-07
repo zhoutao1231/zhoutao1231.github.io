@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.6.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言：Monit是用于Unix和Linux的免费，开源 过程监控工具。使用Monit，可以直接从命令行或通过本机HTTP（S）Web服务器查看系统状态。Monit能够在错误情况下执行自动维护，修复和运行有意义的因果操作。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Monit 5.20.0版本安装与配置">
+<meta property="og:url" content="http://yoursite.com/2020/02/08/about_monit/index.html">
+<meta property="og:site_name" content="且听风语，淡看雨落">
+<meta property="og:description" content="前言：Monit是用于Unix和Linux的免费，开源 过程监控工具。使用Monit，可以直接从命令行或通过本机HTTP（S）Web服务器查看系统状态。Monit能够在错误情况下执行自动维护，修复和运行有意义的因果操作。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/make_error.jpg">
+<meta property="og:image" content="http://yoursite.com/images/make_install.jpg">
+<meta property="og:image" content="http://yoursite.com/images/monit_v.jpg">
+<meta property="og:image" content="http://yoursite.com/images/monit_status.jpg">
+<meta property="article:published_time" content="2020-02-07T16:14:27.000Z">
+<meta property="article:modified_time" content="2020-02-07T17:04:20.000Z">
+<meta property="article:author" content="Zoey Zhou">
+<meta property="article:tag" content="categories">
+<meta property="article:tag" content="about">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/make_error.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/08/about_monit/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Monit 5.20.0版本安装与配置 | 且听风语，淡看雨落</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+    <a href="https://github.com/zhoutao1231" target="_blank" rel="noopener" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">且听风语，淡看雨落</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">青春荒唐我不负你</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/home" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-fw fa-heartbeat"></i>公益 404</a>
+
+  </li>
+      <li class="menu-item menu-item-search">
+        <a role="button" class="popup-trigger"><i class="fa fa-search fa-fw"></i>搜索
+        </a>
+      </li>
+  </ul>
+
+</nav>
+  <div class="site-search">
+    <div class="popup search-popup">
+    <div class="search-header">
+  <span class="search-icon">
+    <i class="fa fa-search"></i>
+  </span>
+  <div class="search-input" id="search-input"></div>
+  <span class="popup-btn-close">
+    <i class="fa fa-times-circle"></i>
+  </span>
+</div>
+<div class="algolia-results">
+  <div id="algolia-stats"></div>
+  <div id="algolia-hits"></div>
+  <div id="algolia-pagination" class="algolia-pagination"></div>
+</div>
+
+  
+</div>
+<div class="search-pop-overlay"></div>
+
+  </div>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/08/about_monit/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Zoey Zhou">
+      <meta itemprop="description" content="纸上谈来终觉浅，唯有实践出真知">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="且听风语，淡看雨落">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Monit 5.20.0版本安装与配置
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-08 00:14:27 / 修改时间：01:04:20" itemprop="dateCreated datePublished" datetime="2020-02-08T00:14:27+08:00">2020-02-08</time>
+            </span>
+
+          
+            <span id="/2020/02/08/about_monit/" class="post-meta-item leancloud_visitors" data-flag-title="Monit 5.20.0版本安装与配置" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/08/about_monit/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/02/08/about_monit/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.6k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="前言："><a href="#前言：" class="headerlink" title="前言："></a>前言：</h3><p>Monit是用于Unix和Linux的免费，开源 过程监控工具。使用Monit，可以直接从命令行或通过本机HTTP（S）Web服务器查看系统状态。Monit能够在错误情况下执行自动维护，修复和运行有意义的因果操作。<a id="more"></a>[3] Monit在Ruby on Rails和Mongrel Web服务器上越来越流行，因为需要一种工具来管理许多相同的Mongrel流程，而这些流程需要运行以支持可扩展的Ruby on Rails站点，Monit非常适合满足Ruby on Rails社区的需求。[4]许多流行的Rails网站都使用了Monit，包括Twitter [5]和scribd。[6]<br>如果进程终止或监视进程特性（例如内存或CPU周期）并通过电子邮件发出警报[7]或执行并采取措施，则Monit可以自动重新启动进程。[8]<br>此外，M / Monit可以监视和管理分布式计算机系统，M / Monit使用Monit作为代理，可以管理和监视。<br>官网：<a href="https://mmonit.com/monit" target="_blank" rel="noopener">https://mmonit.com/monit</a><br>文档：<a href="https://mmonit.com/monit/documentation/monit.html" target="_blank" rel="noopener">https://mmonit.com/monit/documentation/monit.html</a><br>最新版本：<a href="https://mmonit.com/monit/dist/monit-5.26.0.tar.gz" target="_blank" rel="noopener">https://mmonit.com/monit/dist/monit-5.26.0.tar.gz</a></p>
+<h4 id="Monit-的优点："><a href="#Monit-的优点：" class="headerlink" title="Monit 的优点："></a>Monit 的优点：</h4><p>（1）Monit是一个跨平台的用来监控Unix/linux系统（比如Linux、BSD、OSX、Solaris）的工具。<br>（2）并且不依赖任何第三方程序、插件或者库。<br>（3）Monit可以监控服务器进程状态、HTTP/TCP状态码、服务器资源变化、文件系统变动等等，根据这些变化，可以设定邮件报警、重启进程或服务。易于安装、轻量级的实现以及强大的功能，让Monit成为一个理想的后备监控工具。</p>
+<h5 id="一、开始-Monit-（本次测试安装的版本为5-20-0）"><a href="#一、开始-Monit-（本次测试安装的版本为5-20-0）" class="headerlink" title="一、开始 - Monit （本次测试安装的版本为5.20.0）"></a>一、开始 - Monit （本次测试安装的版本为5.20.0）</h5><h6 id="1-1-获取-Monit-源码包"><a href="#1-1-获取-Monit-源码包" class="headerlink" title="1.1 获取 Monit 源码包"></a>1.1 获取 Monit 源码包</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># wget https://mmonit.com/monit/dist/monit-5.20.0.tar.gz</span></span><br></pre></td></tr></table></figure>
+<h6 id="1-2-解压tar包，并进入Monit目录"><a href="#1-2-解压tar包，并进入Monit目录" class="headerlink" title="1.2 解压tar包，并进入Monit目录"></a>1.2 解压tar包，并进入Monit目录</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># tar -xf monit-5.20.0.tar.gz</span></span><br><span class="line">~]<span class="comment"># cd monit-5.20.0</span></span><br></pre></td></tr></table></figure>
+<h6 id="1-3-创建稍后-Monit-稍后要使用到的目录"><a href="#1-3-创建稍后-Monit-稍后要使用到的目录" class="headerlink" title="1.3 创建稍后 Monit 稍后要使用到的目录"></a>1.3 创建稍后 Monit 稍后要使用到的目录</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># mkdir -pv /usr/local/&#123;monit,monitsbin,monitdata&#125;</span></span><br></pre></td></tr></table></figure>
+<h6 id="1-4-编译安装-Monit"><a href="#1-4-编译安装-Monit" class="headerlink" title="1.4 编译安装 Monit"></a>1.4 编译安装 Monit</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"> monit-5.20.0]<span class="comment"># ./configure --prefix=/usr/local/monit --sbindir=/usr/local/monitsbin/ --datadir=/usr/local/monitdata/ --enable-static=/usr/local/monit_static/ --with-PACKAGE=ARG</span></span><br><span class="line"><span class="comment"># 这里我编译时报错了，提示没有PAM-devel开发组件。安装即可：yum -y install pam-devel</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/make_error.jpg" alt=""></p>
+<h6 id="1-5-重新执行编译操作，代出现如下即可："><a href="#1-5-重新执行编译操作，代出现如下即可：" class="headerlink" title="1.5 重新执行编译操作，代出现如下即可："></a>1.5 重新执行编译操作，代出现如下即可：</h6><p><img src="/images/make_install.jpg" alt=""></p>
+<h6 id="1-6-执行-make-amp-amp-make-install"><a href="#1-6-执行-make-amp-amp-make-install" class="headerlink" title="1.6 执行 make &amp;&amp; make install"></a>1.6 执行 make &amp;&amp; make install</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># make &amp;&amp; make install</span></span><br></pre></td></tr></table></figure>
+<h6 id="1-7-将-monit-根目录的-monitrc-复制到-etc-目录下"><a href="#1-7-将-monit-根目录的-monitrc-复制到-etc-目录下" class="headerlink" title="1.7 将 monit 根目录的 monitrc 复制到 /etc/ 目录下"></a>1.7 将 monit 根目录的 monitrc 复制到 /etc/ 目录下</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># cp monitrc /etc/</span></span><br></pre></td></tr></table></figure>
+<h6 id="1-8-设置-monit-环境变量"><a href="#1-8-设置-monit-环境变量" class="headerlink" title="1.8 设置 monit 环境变量"></a>1.8 设置 monit 环境变量</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># vim /etc/profile</span></span><br></pre></td></tr></table></figure>
+<p>添加以下这段话：<br>export PATH=/usr/local/monit/bin:$PATH<br>重载配置文件：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">source</span> /etc/profile</span><br></pre></td></tr></table></figure>
+<h6 id="1-9-测试查看-monit-版本"><a href="#1-9-测试查看-monit-版本" class="headerlink" title="1.9 测试查看 monit 版本"></a>1.9 测试查看 monit 版本</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># monit -v</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/monit_v.jpg" alt=""></p>
+<h6 id="1-10-设置-Monit-开机自启动"><a href="#1-10-设置-Monit-开机自启动" class="headerlink" title="1.10 设置 Monit 开机自启动"></a>1.10 设置 Monit 开机自启动</h6><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># cp system/startup/monit.service /usr/lib/systemd/system/monit.service</span></span><br><span class="line">monit-5.20.0]<span class="comment"># systemctl daemon-reexec</span></span><br><span class="line">monit-5.20.0]<span class="comment"># systemctl start monit</span></span><br><span class="line">monit-5.20.0]<span class="comment"># systemctl status monit</span></span><br></pre></td></tr></table></figure>
+<p><img src="/images/monit_status.jpg" alt=""><br>确认无误后 添加开机自启动</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">monit-5.20.0]<span class="comment"># systemctl enable monit</span></span><br></pre></td></tr></table></figure>
+<h6 id="1-11-Monit-常用的命令"><a href="#1-11-Monit-常用的命令" class="headerlink" title="1.11 Monit 常用的命令"></a>1.11 Monit 常用的命令</h6><p>monit -t                 # 配置文件检测<br>monit                      # 启动monit daemon（源码包启动方式）<br>systemctl start/stop/restart monit     # 启动/停止/重启monit daemon（yum安装方式）<br>monit -c /var/monit/monitrc          # 启动monit daemon时指定配置文件 (源码包启动方式）<br>monit reload                  # 当更新了配置文件需要重载（源码包启动方式）<br>monit status                  # 查看所有服务状态<br>monit status nginx              # 查看nginx服务状态<br>monit stop all               # 停止所有服务<br>monit stop nginx              # 停止nginx服务<br>monit start all              # 启动所有服务<br>monit start nginx              # 启动nginx服务<br>monit -V                  # 查看版本</p>
+<h6 id="1-12-monit监控的服务类型"><a href="#1-12-monit监控的服务类型" class="headerlink" title="1.12 monit监控的服务类型"></a>1.12 monit监控的服务类型</h6><p>monit可以定义9种类型，包括process/file/fifo/filesystem/directory/system/program/network/host<br>1）process: 监控指定进程是否存活<br>2345）file/fifo/filesystem/directory: 监控指定的文件或者目录是否存在<br>6）system: 监控系统资源，包括CPU、内存和负载<br>7）program: 监控指定程序的退出代码或者运行时间的长短<br>8）network: 监控系统指定interface，包括up/down，带宽，误码率，流量，ping<br>9）host: 监控其它主机，可以定义端口、tcp/udp、protocol（http/mysql/websocket）。protocol为http的时候，还可以进一步定义url和返回内容</p>
+<h5 id="二、Monitrc-文件配置Nginx"><a href="#二、Monitrc-文件配置Nginx" class="headerlink" title="二、Monitrc 文件配置Nginx"></a>二、Monitrc 文件配置Nginx</h5><h6 id="2-在-etc-monitrc-下编辑以下选项"><a href="#2-在-etc-monitrc-下编辑以下选项" class="headerlink" title="2. 在 /etc/monitrc 下编辑以下选项"></a>2. 在 /etc/monitrc 下编辑以下选项</h6><h6 id="2-1-修改日志存储、Pid、Monit-id、Monit-state路径-（我是用的默认）"><a href="#2-1-修改日志存储、Pid、Monit-id、Monit-state路径-（我是用的默认）" class="headerlink" title="2.1 修改日志存储、Pid、Monit.id、Monit.state路径    （我是用的默认）"></a>2.1 修改日志存储、Pid、Monit.id、Monit.state路径    （我是用的默认）</h6><p>日志存储<br>改 * # set logfile syslog<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> logfile /var/<span class="built_in">log</span>/monit.log</span><br></pre></td></tr></table></figure><br>Pid<br>改 * # pidfile /var/run/monit.pid<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pidfile /var/run/monit.pid</span><br></pre></td></tr></table></figure><br>Monit.id<br>改 * # set idfile /var/.monit.id<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> idfile /var/.monit.id</span><br></pre></td></tr></table></figure><br>Monit.state<br>改 * # set statefile /var/.monit.state<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> statefile /var/.monit.state</span><br></pre></td></tr></table></figure></p>
+<h6 id="2-2-修改-Monit-Web-界面访问地址和允许访问的IP、账户及密码"><a href="#2-2-修改-Monit-Web-界面访问地址和允许访问的IP、账户及密码" class="headerlink" title="2.2 修改 Monit Web 界面访问地址和允许访问的IP、账户及密码"></a>2.2 修改 Monit Web 界面访问地址和允许访问的IP、账户及密码</h6><p>改 * # set httpd port 2812 and<br>     # use address xxxxx      # only accept connection from localhost<br>     # allow localhost        # allow localhost to connect to the server and<br>     # allow admin:monit      # require user ‘admin’ with password ‘monit’<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">set</span> httpd port 2812 and</span><br><span class="line">use address 192.168.200.120  <span class="comment"># only accept connection from localhost</span></span><br><span class="line">allow localhost        <span class="comment"># allow localhost to connect to the server and</span></span><br><span class="line">allow 192.168.200.0/24</span><br><span class="line">allow admin:qiyue1234      <span class="comment"># require user 'admin' with password 'monit'</span></span><br></pre></td></tr></table></figure></p>
+<h6 id="2-3-系统整体运行状况监控，可以自己去微调，check-system-可以是-IP-或者-域名。（这里我监控的是本机，所以使用默认-HOST）"><a href="#2-3-系统整体运行状况监控，可以自己去微调，check-system-可以是-IP-或者-域名。（这里我监控的是本机，所以使用默认-HOST）" class="headerlink" title="2.3 系统整体运行状况监控，可以自己去微调，check system 可以是 IP 或者 域名。（这里我监控的是本机，所以使用默认 $HOST）"></a>2.3 系统整体运行状况监控，可以自己去微调，check system 可以是 IP 或者 域名。（这里我监控的是本机，所以使用默认 $HOST）</h6><p>改 * # check system $HOST<br>     # if loadavg (1min) &gt; 4 then alert<br>     # if loadavg (5min) &gt; 2 then alert<br>     # if cpu usage &gt; 95% for 10 cycles then alert<br>     # if memory usage &gt; 75% then alert<br>     # if swap usage &gt; 25% then alert<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">check system <span class="variable">$HOST</span></span><br><span class="line"><span class="keyword">if</span> loadavg (1min) &gt; 4 <span class="keyword">then</span> alert</span><br><span class="line"><span class="keyword">if</span> loadavg (5min) &gt; 2 <span class="keyword">then</span> alert</span><br><span class="line"><span class="keyword">if</span> cpu usage &gt; 95% <span class="keyword">for</span> 10 cycles <span class="keyword">then</span> alert</span><br><span class="line"><span class="keyword">if</span> memory usage &gt; 75% <span class="keyword">then</span> alert</span><br><span class="line"><span class="keyword">if</span> swap usage &gt; 25% <span class="keyword">then</span> alert</span><br></pre></td></tr></table></figure></p>
+<h6 id="2-4-设定监控我们的-Web-Server-（我的环境有些特别，监控的是Gitlab自身的Nginx-服务）"><a href="#2-4-设定监控我们的-Web-Server-（我的环境有些特别，监控的是Gitlab自身的Nginx-服务）" class="headerlink" title="2.4 设定监控我们的 Web Server （我的环境有些特别，监控的是Gitlab自身的Nginx 服务）"></a>2.4 设定监控我们的 Web Server （我的环境有些特别，监控的是Gitlab自身的Nginx 服务）</h6><p>改 * # check file apache_bin with path xxxxxxxxxx/apache （原档被我删了，用 xxx 省略。）<br>为 * check file nginx_bin with path /opt/gitlab/embedded/sbin/nginx （你们自己的 Web server 启动程式路径）<br>改 * # check process apache with pidfile xxxxxxxxxxxxx/apache.pid<br>     # start program = “/etc/init.d/apache start” with timeout 60 seconds<br>     # stop program  = “/etc/init.d/apache stop”<br>     # if cpu &gt; 60% for 2 cycles then alert<br>     # if cpu &gt; 80% for 5 cycles then restart<br>     # if cpu &gt; 80% for 5 cycles then restart<br>     # if totalmem &gt; 200.0 MB for 5 cycles then restart<br>     # if children &gt; 250 then restart<br>     # if loadavg(5min) greater than 10 for 8 cycles then stop<br>     # if failed host <a href="http://www.example.com" target="_blank" rel="noopener">www.example.com</a> port 80 protocol http<br>     #    and request “/somefile.html”<br>     # then restart<br>     # if failed port 443 protocol https with timeout 15 seconds then restart<br>     # if 3 restarts within 5 cycles then unmonitor<br>     # depends on apache_bin<br>为 *<br>     <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">check process nginx with pidfile /var/opt/gitlab/nginx/nginx.pid	（Pid 路径 一般在 /var/run/xxxx.pid）</span><br><span class="line">start program = <span class="string">"/opt/gitlab/embedded/sbin/nginx"</span> with timeout 10 seconds	（此处因为路径不一样，仅建议参考上面的官方给出的案例）</span><br><span class="line">stop program  = <span class="string">"/opt/gitlab/embedded/sbin/nginx -s stop"</span>	（此处因为路径不一样，仅建议参考上面的官方给出的案例）</span><br><span class="line"><span class="keyword">if</span> cpu &gt; 60% <span class="keyword">for</span> 2 cycles <span class="keyword">then</span> alert</span><br><span class="line"><span class="keyword">if</span> cpu &gt; 80% <span class="keyword">for</span> 5 cycles <span class="keyword">then</span> restart</span><br><span class="line"><span class="keyword">if</span> cpu &gt; 80% <span class="keyword">for</span> 5 cycles <span class="keyword">then</span> restart</span><br><span class="line"><span class="keyword">if</span> totalmem &gt; 200.0 MB <span class="keyword">for</span> 5 cycles <span class="keyword">then</span> restart</span><br><span class="line"><span class="keyword">if</span> children &gt; 250 <span class="keyword">then</span> restart</span><br><span class="line"><span class="keyword">if</span> loadavg(5min) greater than 10 <span class="keyword">for</span> 8 cycles <span class="keyword">then</span> stop</span><br><span class="line"><span class="keyword">if</span> failed host gitlab.qiyue123.com port 80 protocol http</span><br><span class="line">   and request <span class="string">"/somefile.html"</span></span><br><span class="line"><span class="keyword">then</span> restart</span><br><span class="line"><span class="keyword">if</span> failed port 443 protocol https with timeout 15 seconds <span class="keyword">then</span> restart</span><br><span class="line"><span class="keyword">if</span> 3 restarts within 5 cycles <span class="keyword">then</span> unmonitor</span><br><span class="line">depends on nginx_bin</span><br></pre></td></tr></table></figure></p>
+<h6 id="2-5-根据需求设定其他分组"><a href="#2-5-根据需求设定其他分组" class="headerlink" title="2.5 根据需求设定其他分组"></a>2.5 根据需求设定其他分组</h6><p>group server</p>
+<h6 id="2-6-监控指定网卡流量"><a href="#2-6-监控指定网卡流量" class="headerlink" title="2.6 监控指定网卡流量"></a>2.6 监控指定网卡流量</h6><p>改 * # check network public with interface eth0<br>     # if failed link then alert<br>     # if changed link then alert<br>     # if saturation &gt; 90% then alert<br>     # if download &gt; 10 MB/s then alert<br>     # if total uploaded &gt; 1 GB in last hour then alert<br>为 * check network public with interface ens33    （你的网卡名称）<br>     if failed link then alert<br>     if changed link then alert<br>     if saturation &gt; 90% then alert<br>     if download &gt; 10 MB/s then alert<br>     if total uploaded &gt; 1 GB in last hour then alert</p>
+<p>本文参考链接如下：</p>
+<ol>
+<li><h4 id="Monit监控工具的使用"><a href="#Monit监控工具的使用" class="headerlink" title="Monit监控工具的使用"></a><a href="https://blog.csdn.net/fan_hai_ping/article/details/41733783" target="_blank" rel="noopener">Monit监控工具的使用</a></h4></li>
+<li><h4 id="Monit开源服务器监控工具的知识点"><a href="#Monit开源服务器监控工具的知识点" class="headerlink" title="Monit开源服务器监控工具的知识点"></a><a href="https://blog.51cto.com/zpf666/2345739" target="_blank" rel="noopener">Monit开源服务器监控工具的知识点</a></h4></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/categories/" rel="tag"># categories</a>
+              <a href="/tags/about/" rel="tag"># about</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/01/31/hello-world/" rel="prev" title="Hello World">
+      <i class="fa fa-chevron-left"></i> Hello World
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#前言："><span class="nav-number">1.</span> <span class="nav-text">前言：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Monit-的优点："><span class="nav-number">1.1.</span> <span class="nav-text">Monit 的优点：</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#一、开始-Monit-（本次测试安装的版本为5-20-0）"><span class="nav-number">1.1.1.</span> <span class="nav-text">一、开始 - Monit （本次测试安装的版本为5.20.0）</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-1-获取-Monit-源码包"><span class="nav-number">1.1.1.1.</span> <span class="nav-text">1.1 获取 Monit 源码包</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-2-解压tar包，并进入Monit目录"><span class="nav-number">1.1.1.2.</span> <span class="nav-text">1.2 解压tar包，并进入Monit目录</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-3-创建稍后-Monit-稍后要使用到的目录"><span class="nav-number">1.1.1.3.</span> <span class="nav-text">1.3 创建稍后 Monit 稍后要使用到的目录</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-4-编译安装-Monit"><span class="nav-number">1.1.1.4.</span> <span class="nav-text">1.4 编译安装 Monit</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-5-重新执行编译操作，代出现如下即可："><span class="nav-number">1.1.1.5.</span> <span class="nav-text">1.5 重新执行编译操作，代出现如下即可：</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-6-执行-make-amp-amp-make-install"><span class="nav-number">1.1.1.6.</span> <span class="nav-text">1.6 执行 make &amp;&amp; make install</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-7-将-monit-根目录的-monitrc-复制到-etc-目录下"><span class="nav-number">1.1.1.7.</span> <span class="nav-text">1.7 将 monit 根目录的 monitrc 复制到 &#x2F;etc&#x2F; 目录下</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-8-设置-monit-环境变量"><span class="nav-number">1.1.1.8.</span> <span class="nav-text">1.8 设置 monit 环境变量</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-9-测试查看-monit-版本"><span class="nav-number">1.1.1.9.</span> <span class="nav-text">1.9 测试查看 monit 版本</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-10-设置-Monit-开机自启动"><span class="nav-number">1.1.1.10.</span> <span class="nav-text">1.10 设置 Monit 开机自启动</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-11-Monit-常用的命令"><span class="nav-number">1.1.1.11.</span> <span class="nav-text">1.11 Monit 常用的命令</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#1-12-monit监控的服务类型"><span class="nav-number">1.1.1.12.</span> <span class="nav-text">1.12 monit监控的服务类型</span></a></li></ol></li><li class="nav-item nav-level-5"><a class="nav-link" href="#二、Monitrc-文件配置Nginx"><span class="nav-number">1.1.2.</span> <span class="nav-text">二、Monitrc 文件配置Nginx</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#2-在-etc-monitrc-下编辑以下选项"><span class="nav-number">1.1.2.1.</span> <span class="nav-text">2. 在 &#x2F;etc&#x2F;monitrc 下编辑以下选项</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-1-修改日志存储、Pid、Monit-id、Monit-state路径-（我是用的默认）"><span class="nav-number">1.1.2.2.</span> <span class="nav-text">2.1 修改日志存储、Pid、Monit.id、Monit.state路径    （我是用的默认）</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-2-修改-Monit-Web-界面访问地址和允许访问的IP、账户及密码"><span class="nav-number">1.1.2.3.</span> <span class="nav-text">2.2 修改 Monit Web 界面访问地址和允许访问的IP、账户及密码</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-3-系统整体运行状况监控，可以自己去微调，check-system-可以是-IP-或者-域名。（这里我监控的是本机，所以使用默认-HOST）"><span class="nav-number">1.1.2.4.</span> <span class="nav-text">2.3 系统整体运行状况监控，可以自己去微调，check system 可以是 IP 或者 域名。（这里我监控的是本机，所以使用默认 $HOST）</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-4-设定监控我们的-Web-Server-（我的环境有些特别，监控的是Gitlab自身的Nginx-服务）"><span class="nav-number">1.1.2.5.</span> <span class="nav-text">2.4 设定监控我们的 Web Server （我的环境有些特别，监控的是Gitlab自身的Nginx 服务）</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-5-根据需求设定其他分组"><span class="nav-number">1.1.2.6.</span> <span class="nav-text">2.5 根据需求设定其他分组</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-6-监控指定网卡流量"><span class="nav-number">1.1.2.7.</span> <span class="nav-text">2.6 监控指定网卡流量</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Monit监控工具的使用"><span class="nav-number">1.2.</span> <span class="nav-text">Monit监控工具的使用</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Monit开源服务器监控工具的知识点"><span class="nav-number">1.3.</span> <span class="nav-text">Monit开源服务器监控工具的知识点</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zoey Zhou"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Zoey Zhou</p>
+  <div class="site-description" itemprop="description">纸上谈来终觉浅，唯有实践出真知</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">3</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhoutao1231" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhoutao1231" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zt970421@gmail.com" title="E-Mail → mailto:zt970421@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.facebook.com/" title="FB Page → https:&#x2F;&#x2F;www.facebook.com&#x2F;" rel="noopener" target="_blank"><i class="fa fa-fw fa-facebook"></i>FB Page</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="skype:zt970421?call|chat" title="Skype → skype:zt970421?call|chat" rel="noopener" target="_blank"><i class="fa fa-fw fa-skype"></i>Skype</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      推荐阅读
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.uisdc.com/" title="http:&#x2F;&#x2F;www.uisdc.com&#x2F;" rel="noopener" target="_blank">优设</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.zhangxinxu.com/" title="http:&#x2F;&#x2F;www.zhangxinxu.com&#x2F;" rel="noopener" target="_blank">张鑫旭</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.alloyteam.com/nav/" title="http:&#x2F;&#x2F;www.alloyteam.com&#x2F;nav&#x2F;" rel="noopener" target="_blank">Web前端导航</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.36zhen.com/t?id=3448" title="http:&#x2F;&#x2F;www.36zhen.com&#x2F;t?id&#x3D;3448" rel="noopener" target="_blank">前端书籍资料</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ife.baidu.com/" title="http:&#x2F;&#x2F;ife.baidu.com&#x2F;" rel="noopener" target="_blank">百度前端技术学院</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wf.uisdc.com/cn/" title="http:&#x2F;&#x2F;wf.uisdc.com&#x2F;cn&#x2F;" rel="noopener" target="_blank">google前端开发基础</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zoey Zhou</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">8k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">7 分钟</span>
+</div>
+
+<div class="powered-by">
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.6.0
+  </div>   <span>| 本站已运行<span id="htmer_time"></span></span>
+<script>
+    function secondToDate(second) {
+        if (!second) {
+            return 0;
+        }
+        var time = new Array(0, 0, 0, 0, 0);
+        if (second >= 365 * 24 * 3600) {
+            time[0] = parseInt(second / (365 * 24 * 3600));
+            second %= 365 * 24 * 3600;
+        }
+        if (second >= 24 * 3600) {
+            time[1] = parseInt(second / (24 * 3600));
+            second %= 24 * 3600;
+        }
+        if (second >= 3600) {
+            time[2] = parseInt(second / 3600);
+            second %= 3600;
+        }
+        if (second >= 60) {
+            time[3] = parseInt(second / 60);
+            second %= 60;
+        }
+        if (second > 0) {
+            time[4] = second;
+        }
+        return time;
+    }
+    </script>
+
+<script type="text/javascript" language="javascript">
+    function setTime() {
+        var create_time = Math.round(new Date(Date.UTC(2019, 10, 20, 14, 0, 0)).getTime() / 1000);  //这里设置建站时间
+        var timestamp = Math.round((new Date().getTime() + 8 * 60 * 60 * 1000) / 1000);
+        currentTime = secondToDate((timestamp - create_time));
+        currentTimeHtml = currentTime[0] + '年' + currentTime[1] + '天'
+                + currentTime[2] + '时' + currentTime[3] + '分' + currentTime[4]
+                + '秒';
+        document.getElementById("htmer_time").innerHTML = currentTimeHtml;
+    }    setInterval(setTime, 1000);
+
+        $(function(){
+            $("#learnmore").click(function(){
+                if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
+                    var $target = $(this.hash);
+                    $target = $target.length && $target || $('[name=' + this.hash.slice(1) + ']');
+                    if ($target.length) {
+                        var targetOffset = $target.offset().top;
+                    $('html,body').animate({scrollTop: targetOffset},800);
+                    return false;
+                    }
+                }
+            });
+        });
+
+</script>
+
+
+
+<div class="powered-by">
+    <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <i class="fa fa-user-md"></i>
+    <span id="busuanzi_container_site_uv">
+        本站访客数:<span id="busuanzi_value_site_uv"></span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span id="busuanzi_container_site_pv">
+        本站访问量<span id="busuanzi_value_site_pv"></span>
+    </span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = visitors.getAttribute('id').trim();
+      var title = visitors.getAttribute('data-flag-title').trim();
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.log('Failed to save visitor count', error);
+              })
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return element.getAttribute('id').trim();
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (let item of results) {
+            let { url, time } = item;
+            leancloudSelector(url).innerText = time;
+          }
+          for (let url of entries) {
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI',
+            'X-LC-Key': 'eSkiG5GatWsEOBVz8aN45297',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.8' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+  
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/instantsearch.js@2/dist/instantsearch.min.css">
+<script src="//cdn.jsdelivr.net/npm/instantsearch.js@2/dist/instantsearch.min.js"></script>
+<script src="/js/algolia-search.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI',
+    appKey: 'eSkiG5GatWsEOBVz8aN45297',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname,
+    recordIP: false,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+  <!-- 自建特效存放目录 source/js/src and layout/_custom/custom.swig -->
+  
+<!-- 图片轮播js文件cdn -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-backstretch/2.0.4/jquery.backstretch.min.js"></script>
+<!-- 自定义的js文件 -->
+<script type="text/javascript" src="/js/src/custom.js"></script>
+
+
+
+  <script async src="/js/src/fireworks.js"></script>
+
+
+
+
+  <script src="/js/src/activate-power-mode.js"></script>
+  <script>
+    POWERMODE.colorful = true;
+    POWERMODE.shake = false;
+    document.body.addEventListener('input', POWERMODE);
+  </script>
+
+
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"scale":1.2,"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":300,"height":600,"hOffset":0,"vOffset":-20},"mobile":{"show":true,"scale":0.5},"react":{"opacityDefault":0.75,"opacityOnHover":0.8},"log":false});</script></body>
+</html>

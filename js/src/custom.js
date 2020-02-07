@@ -6,5 +6,5 @@ $(function () {
         "/images/background/bg3.jpg",
 	"/images/background/bg4.jpg",
 	"/images/background/bg5.jpg",
-    ], {duration: 6000, fade: 1500});
+    ], {duration: 6500, fade: 1700});
 });
