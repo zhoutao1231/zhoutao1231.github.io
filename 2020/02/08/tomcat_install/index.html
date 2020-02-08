@@ -48,17 +48,25 @@
   };
 </script>
 
-  <meta name="description" content="纸上谈来终觉浅，唯有实践出真知">
-<meta property="og:type" content="website">
-<meta property="og:title" content="且听风语，淡看雨落">
-<meta property="og:url" content="http://yoursite.com/tags/about/index.html">
+  <meta name="description" content="Tomcat 运作方式:Apache Tomcat。Apache Tomcat是一个Web容器，它允许运行基于Servlet和JavaServer Page（JSP）的Web应用程序。大多数现代Java Web框架都基于Servlet，例如JavaServer Faces，Struts，Spring。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记录 Tomcat 的安装与配置">
+<meta property="og:url" content="http://yoursite.com/2020/02/08/tomcat_install/index.html">
 <meta property="og:site_name" content="且听风语，淡看雨落">
-<meta property="og:description" content="纸上谈来终觉浅，唯有实践出真知">
+<meta property="og:description" content="Tomcat 运作方式:Apache Tomcat。Apache Tomcat是一个Web容器，它允许运行基于Servlet和JavaServer Page（JSP）的Web应用程序。大多数现代Java Web框架都基于Servlet，例如JavaServer Faces，Struts，Spring。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_network.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_webnetwork.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_testweb.jpg">
+<meta property="article:published_time" content="2020-02-08T10:07:48.000Z">
+<meta property="article:modified_time" content="2020-02-08T13:39:57.000Z">
 <meta property="article:author" content="Zoey Zhou">
+<meta property="article:tag" content="categories">
+<meta property="article:tag" content="books">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/tomcat_network.jpg">
 
-<link rel="canonical" href="http://yoursite.com/tags/about/">
+<link rel="canonical" href="http://yoursite.com/2020/02/08/tomcat_install/">
 
 
 <script id="page-configurations">
@@ -66,13 +74,13 @@
   CONFIG.page = {
     sidebar: "",
     isHome: false,
-    isPost: false,
+    isPost: true,
     isPage: false,
     isArchive: false
   };
 </script>
 
-  <title>标签: about | 且听风语，淡看雨落</title>
+  <title>记录 Tomcat 的安装与配置 | 且听风语，淡看雨落</title>
   
 
 
@@ -214,54 +222,160 @@
           <div class="content">
             
 
+  <div class="posts-expand">
+      
   
   
-  
-  <div class="post-block">
-    <div class="posts-collapse">
-      <div class="collection-title">
-        <h1 class="collection-header">about
-          <small>标签</small>
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/08/tomcat_install/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Zoey Zhou">
+      <meta itemprop="description" content="纸上谈来终觉浅，唯有实践出真知">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="且听风语，淡看雨落">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          记录 Tomcat 的安装与配置
         </h1>
-      </div>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2020-02-08 18:07:48 / 修改时间：21:39:57" itemprop="dateCreated datePublished" datetime="2020-02-08T18:07:48+08:00">2020-02-08</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/books/" itemprop="url" rel="index">
+                    <span itemprop="name">books</span>
+                  </a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/books/Tomcat/" itemprop="url" rel="index">
+                    <span itemprop="name">Tomcat</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/02/08/tomcat_install/" class="post-meta-item leancloud_visitors" data-flag-title="记录 Tomcat 的安装与配置" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/08/tomcat_install/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/02/08/tomcat_install/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>3.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>3 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
 
       
-    <div class="collection-year">
-      <h1 class="collection-header">2020</h1>
+        <h3 id="Tomcat-运作方式"><a href="#Tomcat-运作方式" class="headerlink" title="Tomcat 运作方式:"></a>Tomcat 运作方式:</h3><p>Apache Tomcat。Apache Tomcat是一个Web容器，它允许运行基于Servlet和JavaServer Page（JSP）的Web应用程序。大多数现代Java Web框架都基于Servlet，例如JavaServer Faces，Struts，Spring。</p>
+<a id="more"></a>
+<h3 id="一、Tomcat-介绍："><a href="#一、Tomcat-介绍：" class="headerlink" title="一、Tomcat 介绍："></a>一、Tomcat 介绍：</h3><p>Tomcat服务器是一个免费的开源web应用服务器，属于轻量级应用服务器，在中小型系统和并发用户不是很多的场合中被普遍使用，是开发和测试JSP程序的首选。一般来说，Tomcat虽然和apache或者Nginx这些web服务器一样，具有处理HTML页面的功能，然而由于其处理静态页面的能力远不如apache或者Nginx，所以Tomcat一般是作为一个servlet和JSP容器，单独运行在后端。Tomcat运行场景如下：<br><img src="/images/tomcat_network.jpg" alt=""><br>用户访问的永远是apache/Nginx服务器，然后由apache/Nginx服务器转交给Tomcat服务器处理，所有服务器都连接着共享存储服务器，以便使用户每次访问到数据是一样的，apache/Nginx是用来做调度的，也就是熟知的负载均衡，关于负载均衡不多解释了。。。</p>
+<p>通常情况下，一台Tomcat站点由于可能出现单点故障及无法应付过多的客户复杂多样的请求等问题，不能单独应用于生产环境下，所以需要使用负载均衡来解决这些问题。</p>
+<p>Nginx是一个非常优秀的http服务器软件，它能够支持高达50000个并发连接数的响应，拥有强大的静态资源处理能力，运行稳定，并且内存、CPU等系统资源消耗非常低。目前很多大型网站都应用Nginx服务器作为后端网站程序的反向代理及负载均衡器，来提升整个站点的负载并发能力。</p>
+<p>开始准备工作，搭建下面的环境，为了简化，就不部署共享存储服务器了，环境如下：<br><img src="/images/tomcat_webnetwork.jpg" alt=""></p>
+<h4 id="1-1-查看-Java-版本以及是否安装，没有安装使用-yum-安装即可。"><a href="#1-1-查看-Java-版本以及是否安装，没有安装使用-yum-安装即可。" class="headerlink" title="1.1 查看 Java 版本以及是否安装，没有安装使用 yum 安装即可。"></a>1.1 查看 Java 版本以及是否安装，没有安装使用 yum 安装即可。</h4>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># java -version</span></span><br><span class="line">openjdk version <span class="string">"1.8.0_242"</span></span><br><span class="line">OpenJDK Runtime Environment (build 1.8.0_242-b08)</span><br><span class="line">OpenJDK 64-Bit Server VM (build 25.242-b08, mixed mode)</span><br><span class="line">[root@node3 ~]<span class="comment">#</span></span><br></pre></td></tr></table></figure>
+<h4 id="1-2-wget-官方的-Tomcat-安装包，解压安装。"><a href="#1-2-wget-官方的-Tomcat-安装包，解压安装。" class="headerlink" title="1.2 wget 官方的 Tomcat 安装包，解压安装。"></a>1.2 wget 官方的 Tomcat 安装包，解压安装。</h4><p><strong>这里使用 Tomcat 8.5.50</strong><br><strong>Tomcat不用编译安装，解压后即可用</strong><br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">  ~]<span class="comment"># wget https://www-eu.apache.org/dist/tomcat/tomcat-8/v8.5.50/bin/apache-tomcat-8.5.50.tar.gz</span></span><br><span class="line">  ~]<span class="comment"># tar -xf apache-tomcat-8.5.50.tar.gz  </span></span><br><span class="line">  ~]<span class="comment"># cd apache-tomcat-8.5.50</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># mkdir -pv /usr/local/tomcat-8.5.50   #建立Tomcat 存放目录</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># mkdir -pv /data/tomcat/web/app1    #建立java web站点，存放网站文件</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># mv * /usr/local/tomcat-8.5.50/</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># vim /data/tomcat/web/app1/index.jsp</span></span><br><span class="line">  &lt;%@ page language=<span class="string">"java"</span> import=<span class="string">"java.util.*"</span> pageEncoding=<span class="string">"UTF-8"</span>%&gt;</span><br><span class="line">  &lt;html&gt;</span><br><span class="line">    &lt;head&gt;</span><br><span class="line">          &lt;title&gt;JSP test1 page&lt;/title&gt;</span><br><span class="line">    &lt;/head&gt;</span><br><span class="line">    &lt;body&gt;</span><br><span class="line">          &lt;% out.println(<span class="string">"我是测试页面"</span>);%&gt;</span><br><span class="line">    &lt;/body&gt;</span><br><span class="line">  &lt;/html&gt;</span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># vim /usr/local/tomcat-8.5.50/conf/server.xml   #进入Tomcat 修改server配置文件</span></span><br><span class="line">--------------------------------------------------------------------------------</span><br><span class="line">  &lt;Host name=<span class="string">"localhost"</span>  appBase=<span class="string">"webapps"</span></span><br><span class="line">            unpackWARs=<span class="string">"true"</span> autoDeploy=<span class="string">"true"</span>&gt;   <span class="comment">#定位到此处，添加下面两行内容。</span></span><br><span class="line">          &lt;Context docBase=<span class="string">"/data/tomcat/web/app1/"</span> path=<span class="string">""</span> reloadable=<span class="string">"false"</span>&gt;</span><br><span class="line">          &lt;/Context&gt;</span><br><span class="line"></span><br><span class="line">  <span class="comment">#docBase:web应用的文档默认目录；</span></span><br><span class="line">  <span class="comment">#path=""设置默认“类；”</span></span><br><span class="line">  <span class="comment">#reloadable设置监视“类”是否变化；</span></span><br><span class="line">  <span class="comment">#保存退出</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="1-3-启动-Tomcat-服务并放行8080端口，HTTPS端口：8443。"><a href="#1-3-启动-Tomcat-服务并放行8080端口，HTTPS端口：8443。" class="headerlink" title="1.3 启动 Tomcat 服务并放行8080端口，HTTPS端口：8443。"></a>1.3 启动 Tomcat 服务并放行8080端口，HTTPS端口：8443。</h4>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">apache-tomcat-8.5.50]<span class="comment"># /usr/local/tomcat-8.5.50/bin/startup.sh</span></span><br><span class="line">Using CATALINA_BASE:   /usr/<span class="built_in">local</span>/tomcat-8.5.50</span><br><span class="line">Using CATALINA_HOME:   /usr/<span class="built_in">local</span>/tomcat-8.5.50</span><br><span class="line">Using CATALINA_TMPDIR: /usr/<span class="built_in">local</span>/tomcat-8.5.50/temp</span><br><span class="line">Using JRE_HOME:        /usr</span><br><span class="line">Using CLASSPATH:       /usr/<span class="built_in">local</span>/tomcat-8.5.50/bin/bootstrap.jar:/usr/<span class="built_in">local</span>/tomcat-8.5.50/bin/tomcat-juli.jar</span><br><span class="line">Tomcat started.</span><br><span class="line"><span class="comment">#防火墙放行端口</span></span><br><span class="line">apache-tomcat-8.5.50]<span class="comment"># firewall-cmd --zone=public --add-port=8080/tcp --permanent</span></span><br><span class="line">apache-tomcat-8.5.50]<span class="comment"># firewall-cmd --reload</span></span><br><span class="line">apache-tomcat-8.5.50]<span class="comment"># ss -tnl</span></span><br><span class="line">State    Recv-Q   Send-Q           Local Address:Port        Peer Address:Port              </span><br><span class="line">LISTEN      0      128                 127.0.0.1:9000               *:*                  </span><br><span class="line">LISTEN      0      128                 127.0.0.1:1514               *:*                  </span><br><span class="line">LISTEN      0      128                 *:111                        *:*                  </span><br><span class="line">LISTEN      0      128                 *:22                         *:*                  </span><br><span class="line">LISTEN      0      128                 [::]:443                     [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:4443                    [::]:*                  </span><br><span class="line">LISTEN      0      1                   [::ffff:127.0.0.1]:8005      [::]:*                  </span><br><span class="line">LISTEN      0      100                 [::]:8009                    [::]:*                  </span><br><span class="line">LISTEN      0      80                  [::]:3306                    [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:111                     [::]:*                  </span><br><span class="line">LISTEN      0      100                 [::]:8080                    [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:80                      [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:22                      [::]:*</span><br></pre></td></tr></table></figure>
+<h4 id="1-4-测试访问-192-168-200-203-8080"><a href="#1-4-测试访问-192-168-200-203-8080" class="headerlink" title="1.4 测试访问 192.168.200.203:8080"></a>1.4 测试访问 192.168.200.203:8080</h4><p>  <img src="/images/tomcat_testweb.jpg" alt=""></p>
+<p><strong>至此，192.168.1.1的Tomcat就已经配置完成了，另一台Tomcat服务器192.168.200.204的配置和192.168.200.203的配置完全一样，将上面的配置在192.168.200.204服务器上配置一遍即可，不过为了测试的时候可以看出负载均衡的效果，让我们可以看出每次访问的服务器都不是同一台，需要将192.168.200.204的Tomcat服务器的测试页面和192.168.200.203的页面不一样。</strong></p>
+<p><strong>不过在实际生产环境中，两台Tomcat访问的一定是使用同一个共享存储服务器，不管是哪台服务器向用户提供服务，用户接受到的页面一定是一样的。</strong></p>
+<h3 id="二、Tomcat-优化与生产环境的基础配置"><a href="#二、Tomcat-优化与生产环境的基础配置" class="headerlink" title="二、Tomcat 优化与生产环境的基础配置"></a>二、Tomcat 优化与生产环境的基础配置</h3><h4 id="2-1-为-Tomcat-配置环境变量"><a href="#2-1-为-Tomcat-配置环境变量" class="headerlink" title="2.1 为 Tomcat 配置环境变量"></a>2.1 为 Tomcat 配置环境变量</h4>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h4 id="友情链接："><a href="#友情链接：" class="headerlink" title="友情链接："></a>友情链接：</h4><p>  <a href="https://blog.51cto.com/14154700/2412180" target="_blank" rel="noopener">centos 7部署Tomcat及其负载均衡配置详解</a><br>  <a href="https://blog.51cto.com/14154700/2412234" target="_blank" rel="noopener">Tomcat服务器配置详解</a></p>
+
     </div>
 
-  <article itemscope itemtype="http://schema.org/Article">
-    <header class="post-header">
+    
+    
+    
 
-      <div class="post-meta">
-        <time itemprop="dateCreated"
-              datetime="2020-01-21T21:15:56+08:00"
-              content="2020-01-21">
-          01-21
-        </time>
-      </div>
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/categories/" rel="tag"># categories</a>
+              <a href="/tags/books/" rel="tag"># books</a>
+          </div>
 
-      <h2 class="post-title">
-          <a class="post-title-link" href="/2020/01/21/myself/" itemprop="url">
-            <span itemprop="name">我的第一篇文章?!</span>
-          </a>
-      </h2>
+        
 
-    </header>
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/08/about_monit/" rel="prev" title="Monit 5.20.0版本安装与配置">
+      <i class="fa fa-chevron-left"></i> Monit 5.20.0版本安装与配置
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
   </article>
+  
+  
+  
 
-    </div>
   </div>
-  
-  
-  
-
-  
-
 
 
           </div>
           
+    <div class="comments" id="comments"></div>
 
         </div>
           
@@ -286,6 +400,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Tomcat-运作方式"><span class="nav-text">Tomcat 运作方式:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一、Tomcat-介绍："><span class="nav-text">一、Tomcat 介绍：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-查看-Java-版本以及是否安装，没有安装使用-yum-安装即可。"><span class="nav-text">1.1 查看 Java 版本以及是否安装，没有安装使用 yum 安装即可。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-wget-官方的-Tomcat-安装包，解压安装。"><span class="nav-text">1.2 wget 官方的 Tomcat 安装包，解压安装。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-启动-Tomcat-服务并放行8080端口，HTTPS端口：8443。"><span class="nav-text">1.3 启动 Tomcat 服务并放行8080端口，HTTPS端口：8443。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-测试访问-192-168-200-203-8080"><span class="nav-text">1.4 测试访问 192.168.200.203:8080</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、Tomcat-优化与生产环境的基础配置"><span class="nav-text">二、Tomcat 优化与生产环境的基础配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-为-Tomcat-配置环境变量"><span class="nav-text">2.1 为 Tomcat 配置环境变量</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#友情链接："><span class="nav-text">友情链接：</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
