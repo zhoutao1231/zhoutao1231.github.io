@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.6.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Tomcat 运作方式:Apache Tomcat。Apache Tomcat是一个Web容器，它允许运行基于Servlet和JavaServer Page（JSP）的Web应用程序。大多数现代Java Web框架都基于Servlet，例如JavaServer Faces，Struts，Spring。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="记录 Tomcat 的安装与配置">
+<meta property="og:url" content="http://yoursite.com/2020/02/08/tomcat_install/index.html">
+<meta property="og:site_name" content="且听风语，淡看雨落">
+<meta property="og:description" content="Tomcat 运作方式:Apache Tomcat。Apache Tomcat是一个Web容器，它允许运行基于Servlet和JavaServer Page（JSP）的Web应用程序。大多数现代Java Web框架都基于Servlet，例如JavaServer Faces，Struts，Spring。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_network.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_webnetwork.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_testweb.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_error.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_changeindex.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_weberror.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_websession.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_webdisable.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_userxml.jpg">
+<meta property="og:image" content="http://yoursite.com/images/tomcat_romup.jpg">
+<meta property="article:published_time" content="2020-02-08T10:07:48.000Z">
+<meta property="article:modified_time" content="2020-02-11T08:51:09.000Z">
+<meta property="article:author" content="Zoey Zhou">
+<meta property="article:tag" content="categories">
+<meta property="article:tag" content="books">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/tomcat_network.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2020/02/08/tomcat_install/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>记录 Tomcat 的安装与配置 | 且听风语，淡看雨落</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+    <a href="https://github.com/zhoutao1231" target="_blank" rel="noopener" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">且听风语，淡看雨落</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">青春荒唐我不负你</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/home" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/categories/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/categories/books/" rel="section"><i class="fa fa-fw fa-book"></i>资料</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-fw fa-heartbeat"></i>公益 404</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/02/08/tomcat_install/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Zoey Zhou">
+      <meta itemprop="description" content="纸上谈来终觉浅，唯有实践出真知">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="且听风语，淡看雨落">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          记录 Tomcat 的安装与配置
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-02-08 18:07:48" itemprop="dateCreated datePublished" datetime="2020-02-08T18:07:48+08:00">2020-02-08</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-02-11 16:51:09" itemprop="dateModified" datetime="2020-02-11T16:51:09+08:00">2020-02-11</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/books/" itemprop="url" rel="index">
+                    <span itemprop="name">books</span>
+                  </a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/books/Tomcat/" itemprop="url" rel="index">
+                    <span itemprop="name">Tomcat</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/02/08/tomcat_install/" class="post-meta-item leancloud_visitors" data-flag-title="记录 Tomcat 的安装与配置" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/02/08/tomcat_install/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/02/08/tomcat_install/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>14k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>12 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="Tomcat-运作方式"><a href="#Tomcat-运作方式" class="headerlink" title="Tomcat 运作方式:"></a>Tomcat 运作方式:</h3><p>Apache Tomcat。Apache Tomcat是一个Web容器，它允许运行基于Servlet和JavaServer Page（JSP）的Web应用程序。大多数现代Java Web框架都基于Servlet，例如JavaServer Faces，Struts，Spring。</p>
+<a id="more"></a>
+<h3 id="一、Tomcat-介绍："><a href="#一、Tomcat-介绍：" class="headerlink" title="一、Tomcat 介绍："></a>一、Tomcat 介绍：</h3><p>Tomcat服务器是一个免费的开源web应用服务器，属于轻量级应用服务器，在中小型系统和并发用户不是很多的场合中被普遍使用，是开发和测试JSP程序的首选。一般来说，Tomcat虽然和apache或者Nginx这些web服务器一样，具有处理HTML页面的功能，然而由于其处理静态页面的能力远不如apache或者Nginx，所以Tomcat一般是作为一个servlet和JSP容器，单独运行在后端。Tomcat运行场景如下：<br><img src="/images/tomcat_network.jpg" alt=""><br>用户访问的永远是apache/Nginx服务器，然后由apache/Nginx服务器转交给Tomcat服务器处理，所有服务器都连接着共享存储服务器，以便使用户每次访问到数据是一样的，apache/Nginx是用来做调度的，也就是熟知的负载均衡，关于负载均衡不多解释了。。。</p>
+<p>通常情况下，一台Tomcat站点由于可能出现单点故障及无法应付过多的客户复杂多样的请求等问题，不能单独应用于生产环境下，所以需要使用负载均衡来解决这些问题。</p>
+<p>Nginx是一个非常优秀的http服务器软件，它能够支持高达50000个并发连接数的响应，拥有强大的静态资源处理能力，运行稳定，并且内存、CPU等系统资源消耗非常低。目前很多大型网站都应用Nginx服务器作为后端网站程序的反向代理及负载均衡器，来提升整个站点的负载并发能力。</p>
+<p>开始准备工作，搭建下面的环境，为了简化，就不部署共享存储服务器了，环境如下：<br><img src="/images/tomcat_webnetwork.jpg" alt=""></p>
+<h4 id="1-1-安装-Java-1-8-0-241。"><a href="#1-1-安装-Java-1-8-0-241。" class="headerlink" title="1.1 安装 Java 1.8.0_241。"></a>1.1 安装 Java 1.8.0_241。</h4><p>安装包下载： <a href="https://www.oracle.com/technetwork/java/javase/downloads/jdk8-downloads-2133151.html" target="_blank" rel="noopener">Java download</a><br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># tar -xf jdk-8u241-linux-x64.tar.gz</span></span><br><span class="line">~]<span class="comment"># cd jdk1.8.0_241/</span></span><br><span class="line">jdk1.8.0_241]<span class="comment"># mkdir -pv /usr/local/jdk8</span></span><br><span class="line">jdk1.8.0_241]<span class="comment"># mv * /usr/local/jdk8</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#配置Java 环境变量</span></span><br><span class="line">jdk8]<span class="comment"># vim /etc/profile</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#在最后一行添加：</span></span><br><span class="line"><span class="built_in">export</span> PATH=/usr/<span class="built_in">local</span>/jdk8/bin<span class="variable">$PATH</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#重载配置文件</span></span><br><span class="line">jdk8]<span class="comment"># source /etc/profile</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#查看版本号</span></span><br><span class="line">~]<span class="comment"># java -version</span></span><br><span class="line">openjdk version <span class="string">"1.8.0_241"</span></span><br><span class="line">OpenJDK Runtime Environment (build 1.8.0_241-b07)</span><br><span class="line">OpenJDK 64-Bit Server VM (build 25.241-b07, mixed mode)</span><br></pre></td></tr></table></figure></p>
+<h4 id="1-2-wget-官方的-Tomcat-安装包，解压安装。"><a href="#1-2-wget-官方的-Tomcat-安装包，解压安装。" class="headerlink" title="1.2 wget 官方的 Tomcat 安装包，解压安装。"></a>1.2 wget 官方的 Tomcat 安装包，解压安装。</h4><p><strong>这里使用 Tomcat 8.5.50</strong><br><strong>Tomcat不用编译安装，解压后即可用</strong><br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">  ~]<span class="comment"># wget https://www-eu.apache.org/dist/tomcat/tomcat-8/v8.5.50/bin/apache-tomcat-8.5.50.tar.gz</span></span><br><span class="line">  ~]<span class="comment"># tar -xf apache-tomcat-8.5.50.tar.gz  </span></span><br><span class="line">  ~]<span class="comment"># cd apache-tomcat-8.5.50</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># mkdir -pv /usr/local/tomcat-8.5.50   #建立Tomcat 存放目录</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># mkdir -pv /data/tomcat/web/app1    #建立java web站点，存放网站文件</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># mv * /usr/local/tomcat-8.5.50/</span></span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># vim /data/tomcat/web/app1/index.jsp</span></span><br><span class="line">  &lt;%@ page language=<span class="string">"java"</span> import=<span class="string">"java.util.*"</span> pageEncoding=<span class="string">"UTF-8"</span>%&gt;</span><br><span class="line">  &lt;html&gt;</span><br><span class="line">    &lt;head&gt;</span><br><span class="line">          &lt;title&gt;JSP test1 page&lt;/title&gt;</span><br><span class="line">    &lt;/head&gt;</span><br><span class="line">    &lt;body&gt;</span><br><span class="line">          &lt;% out.println(<span class="string">"我是测试页面"</span>);%&gt;</span><br><span class="line">    &lt;/body&gt;</span><br><span class="line">  &lt;/html&gt;</span><br><span class="line">  apache-tomcat-8.5.50]<span class="comment"># vim /usr/local/tomcat-8.5.50/conf/server.xml   #进入Tomcat 修改server配置文件</span></span><br><span class="line">--------------------------------------------------------------------------------</span><br><span class="line">  &lt;Host name=<span class="string">"localhost"</span>  appBase=<span class="string">"webapps"</span></span><br><span class="line">            unpackWARs=<span class="string">"true"</span> autoDeploy=<span class="string">"true"</span>&gt;   <span class="comment">#定位到此处，添加下面两行内容。</span></span><br><span class="line">          &lt;Context docBase=<span class="string">"/data/tomcat/web/app1/"</span> path=<span class="string">""</span> reloadable=<span class="string">"false"</span>&gt;</span><br><span class="line">          &lt;/Context&gt;</span><br><span class="line"></span><br><span class="line">  <span class="comment">#docBase:web应用的文档默认目录；</span></span><br><span class="line">  <span class="comment">#path=""设置默认“类；”</span></span><br><span class="line">  <span class="comment">#reloadable设置监视“类”是否变化；</span></span><br><span class="line">  <span class="comment">#保存退出</span></span><br></pre></td></tr></table></figure></p>
+<h4 id="1-3-启动-Tomcat-服务并放行8080端口，HTTPS端口：8443。"><a href="#1-3-启动-Tomcat-服务并放行8080端口，HTTPS端口：8443。" class="headerlink" title="1.3 启动 Tomcat 服务并放行8080端口，HTTPS端口：8443。"></a>1.3 启动 Tomcat 服务并放行8080端口，HTTPS端口：8443。</h4>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">apache-tomcat-8.5.50]<span class="comment"># /usr/local/tomcat-8.5.50/bin/startup.sh</span></span><br><span class="line">Using CATALINA_BASE:   /usr/<span class="built_in">local</span>/tomcat-8.5.50</span><br><span class="line">Using CATALINA_HOME:   /usr/<span class="built_in">local</span>/tomcat-8.5.50</span><br><span class="line">Using CATALINA_TMPDIR: /usr/<span class="built_in">local</span>/tomcat-8.5.50/temp</span><br><span class="line">Using JRE_HOME:        /usr</span><br><span class="line">Using CLASSPATH:       /usr/<span class="built_in">local</span>/tomcat-8.5.50/bin/bootstrap.jar:/usr/<span class="built_in">local</span>/tomcat-8.5.50/bin/tomcat-juli.jar</span><br><span class="line">Tomcat started.</span><br><span class="line"></span><br><span class="line"><span class="comment">#防火墙放行端口</span></span><br><span class="line">apache-tomcat-8.5.50]<span class="comment"># firewall-cmd --zone=public --add-port=8080/tcp --permanent</span></span><br><span class="line">apache-tomcat-8.5.50]<span class="comment"># firewall-cmd --reload</span></span><br><span class="line">apache-tomcat-8.5.50]<span class="comment"># ss -tnl</span></span><br><span class="line">State    Recv-Q   Send-Q           Local Address:Port        Peer Address:Port              </span><br><span class="line">LISTEN      0      128                 127.0.0.1:9000               *:*                  </span><br><span class="line">LISTEN      0      128                 127.0.0.1:1514               *:*                  </span><br><span class="line">LISTEN      0      128                 *:111                        *:*                  </span><br><span class="line">LISTEN      0      128                 *:22                         *:*                  </span><br><span class="line">LISTEN      0      128                 [::]:443                     [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:4443                    [::]:*                  </span><br><span class="line">LISTEN      0      1                   [::ffff:127.0.0.1]:8005      [::]:*                  </span><br><span class="line">LISTEN      0      100                 [::]:8009                    [::]:*                  </span><br><span class="line">LISTEN      0      80                  [::]:3306                    [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:111                     [::]:*                  </span><br><span class="line">LISTEN      0      100                 [::]:8080                    [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:80                      [::]:*                  </span><br><span class="line">LISTEN      0      128                 [::]:22                      [::]:*</span><br></pre></td></tr></table></figure>
+<h4 id="1-4-测试访问-192-168-200-203-8080"><a href="#1-4-测试访问-192-168-200-203-8080" class="headerlink" title="1.4 测试访问 192.168.200.203:8080"></a>1.4 测试访问 192.168.200.203:8080</h4><p>  <img src="/images/tomcat_testweb.jpg" alt=""></p>
+<p><strong>至此，192.168.1.1的Tomcat就已经配置完成了，另一台Tomcat服务器192.168.200.204的配置和192.168.200.203的配置完全一样，将上面的配置在192.168.200.204服务器上配置一遍即可，不过为了测试的时候可以看出负载均衡的效果，让我们可以看出每次访问的服务器都不是同一台，需要将192.168.200.204的Tomcat服务器的测试页面和192.168.200.203的页面不一样。</strong></p>
+<p><strong>不过在实际生产环境中，两台Tomcat访问的一定是使用同一个共享存储服务器，不管是哪台服务器向用户提供服务，用户接受到的页面一定是一样的。</strong></p>
+<h3 id="二、Tomcat-优化与生产环境的基础配置"><a href="#二、Tomcat-优化与生产环境的基础配置" class="headerlink" title="二、Tomcat 优化与生产环境的基础配置"></a>二、Tomcat 优化与生产环境的基础配置</h3><h4 id="2-1-为-Tomcat-配置环境变量与-daemon-后台运行"><a href="#2-1-为-Tomcat-配置环境变量与-daemon-后台运行" class="headerlink" title="2.1 为 Tomcat 配置环境变量与 daemon 后台运行"></a>2.1 为 Tomcat 配置环境变量与 daemon 后台运行</h4><p>通常在开发环境中，我们使用$CATALINA_HOME/bin/startup.sh来启动tomcat, 使用$CATALINA_HOME/bin/shutdown.sh来关闭tomcat。 而在生产环境中，我们要配置tomcat使其以daemon方式运行，这是因为：</p>
+<ul>
+<li>以daemon运行不受终端影响，不会因为退出终端而停止运行</li>
+<li>可以让tomcat以普通用户身份运行，可以让tomcat随linux启动而启动</li>
+</ul>
+<p><strong>将 Tomcat 配置为守护进程</strong></p>
+<h5 id="2-1-1-创建守护进程用户-Tomcat-，并将-usr-local-tomcat-8-5-50-目录及其文件的所有权赋予-tomcat-用户。"><a href="#2-1-1-创建守护进程用户-Tomcat-，并将-usr-local-tomcat-8-5-50-目录及其文件的所有权赋予-tomcat-用户。" class="headerlink" title="2.1.1 创建守护进程用户 Tomcat ，并将 /usr/local/tomcat-8.5.50 目录及其文件的所有权赋予 tomcat 用户。"></a>2.1.1 创建守护进程用户 Tomcat ，并将 /usr/local/tomcat-8.5.50 目录及其文件的所有权赋予 tomcat 用户。</h5>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># useradd -r -s /sbin/nologin tomcat</span></span><br><span class="line">~]<span class="comment"># chown -R tomcat:tomcat /usr/local/tomcat-8.5.50/</span></span><br></pre></td></tr></table></figure>
+<h5 id="2-1-2-将tomcat配置成守护进程需要借助apache-commons-daemon项目的jsvc工具，-该工具通常包含在tomcat包中（bin-commons-daemon-native-tar-gz）。"><a href="#2-1-2-将tomcat配置成守护进程需要借助apache-commons-daemon项目的jsvc工具，-该工具通常包含在tomcat包中（bin-commons-daemon-native-tar-gz）。" class="headerlink" title="2.1.2 将tomcat配置成守护进程需要借助apache-commons-daemon项目的jsvc工具， 该工具通常包含在tomcat包中（bin/commons-daemon-native.tar.gz）。"></a>2.1.2 将tomcat配置成守护进程需要借助apache-commons-daemon项目的jsvc工具， 该工具通常包含在tomcat包中（bin/commons-daemon-native.tar.gz）。</h5><p><strong>在 Tomcat 安装目录 bin 下面已经存在了对应版本的 tomcat-native 安装包了,我们把它解压出来编译即可。</strong><br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># cd /usr/local/tomcat-8.5.50/bin/</span></span><br><span class="line">bin]<span class="comment"># tar -xf commons-daemon-native.tar.gz</span></span><br><span class="line">bin]<span class="comment"># cd commons-daemon-1.2.2-native-src/unix/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#编译安装组件</span></span><br><span class="line">unix]<span class="comment"># ./configure --with-java=/usr/local/jdk8  </span></span><br><span class="line">unix]<span class="comment"># make &amp;&amp; make install</span></span><br><span class="line">unix]<span class="comment"># cp jsvc ../../</span></span><br><span class="line">unix]<span class="comment"># cd ../../</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="2-1-3-更改-daemon-sh-部分内容，并测试使用-jsvc-启动-tomcat-。"><a href="#2-1-3-更改-daemon-sh-部分内容，并测试使用-jsvc-启动-tomcat-。" class="headerlink" title="2.1.3 更改 daemon.sh 部分内容，并测试使用 jsvc 启动 tomcat 。"></a>2.1.3 更改 daemon.sh 部分内容，并测试使用 jsvc 启动 tomcat 。</h5>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">bin]<span class="comment"># vim daemon.sh</span></span><br><span class="line"><span class="comment">#添加如下改动：</span></span><br><span class="line"></span><br><span class="line">1. 在首行 <span class="comment">#!/bin/sh 的下一行添加一条服务配置信息</span></span><br><span class="line">	<span class="comment"># chkconfig: 2345 20 80</span></span><br><span class="line">	<span class="comment">#补充说明：注意#不能去掉。#chkconfig 的2345表示默认服务级别，启动顺序为20，关闭顺序为80。</span></span><br><span class="line"></span><br><span class="line">2. 在代码最开始位置添加JAVA_HOME和CATALINA_HOME路径，如下</span><br><span class="line">	<span class="comment">#modify JAVA_HOME path and CATALINA_HOME path。</span></span><br><span class="line">	JAVA_HOME=/usr/<span class="built_in">local</span>/jdk8</span><br><span class="line">	CATALINA_HOME=/usr/<span class="built_in">local</span>/tomcat-8.5.50/</span><br><span class="line">	<span class="built_in">echo</span> <span class="string">"JAVA_HOME"</span>:<span class="variable">$JAVA_HOME</span></span><br><span class="line">	<span class="built_in">echo</span> <span class="string">"CATALINA_HOME"</span>:<span class="variable">$CATALINA_HOME</span></span><br><span class="line"></span><br><span class="line">3. 更改TOMCAT_USER （默认为 tomcat）</span><br><span class="line">  找到 <span class="built_in">test</span> <span class="string">".<span class="variable">$TOMCAT_USER</span>"</span> = . &amp;&amp; TOMCAT_USER= 这一行，在等号后面加上用户</span><br><span class="line"> 如：<span class="built_in">test</span> <span class="string">".<span class="variable">$TOMCAT_USER</span>"</span> = . &amp;&amp; TOMCAT_USER= root</span><br><span class="line">  补充说明：</span><br><span class="line"> 如果用root用户启动，也可以不指定，在start模块里面去掉-user <span class="variable">$TOMCAT_USER</span> \</span><br><span class="line"></span><br><span class="line">4. 指定日志位置，默认为 <span class="variable">$CATALINA_BASE</span>/logs/catalina-daemon.out 。</span><br><span class="line">  找到<span class="built_in">test</span> <span class="string">".<span class="variable">$CATALINA_OUT</span>"</span> = . &amp;&amp; CATALINA_OUT= 这行，更改路径。</span><br></pre></td></tr></table></figure>
+<h5 id="2-1-4-执行-daemon-sh-，测试效果。"><a href="#2-1-4-执行-daemon-sh-，测试效果。" class="headerlink" title="2.1.4 执行 daemon.sh ，测试效果。"></a>2.1.4 执行 daemon.sh ，测试效果。</h5>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">bin]<span class="comment"># ./daemon.sh start</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#测试守护进程</span></span><br><span class="line">bin]<span class="comment"># netstat -anp | grep 8080</span></span><br><span class="line">tcp6       0      0 :::8080          :::*          LISTEN      8192/jsvc.exec</span><br><span class="line"><span class="comment">#kill -9 占用8080的进程</span></span><br><span class="line"><span class="comment">#稍等片刻，看tomcat是否会自动开起来。</span></span><br></pre></td></tr></table></figure>
+<h5 id="2-1-5-将-daemon-sh-启动脚本添加至-systemctl-服务，使其开机自启动。"><a href="#2-1-5-将-daemon-sh-启动脚本添加至-systemctl-服务，使其开机自启动。" class="headerlink" title="2.1.5 将 daemon.sh 启动脚本添加至 systemctl 服务，使其开机自启动。"></a>2.1.5 将 daemon.sh 启动脚本添加至 systemctl 服务，使其开机自启动。</h5>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">bin]<span class="comment"># cp daemon.sh /etc/init.d/tomcat</span></span><br><span class="line">bin]<span class="comment"># chkconfig --add tomcat</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#查看服务是否添加成功</span></span><br><span class="line">bin]<span class="comment"># chkconfig --list tomcat</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#reboot 主机查看是否开机自启动。</span></span><br><span class="line">bin]<span class="comment"># reboot</span></span><br></pre></td></tr></table></figure>
+<h4 id="2-2-Tomcat-安全配置"><a href="#2-2-Tomcat-安全配置" class="headerlink" title="2.2 Tomcat 安全配置"></a>2.2 Tomcat 安全配置</h4><h5 id="2-2-1-版本安全"><a href="#2-2-1-版本安全" class="headerlink" title="2.2.1 版本安全"></a>2.2.1 版本安全</h5><p>  升级当前tomcat版本为最新稳定版本。<br>  在升级版本中，需要注意两点：</p>
+<ul>
+<li><p>尽量避免跨大版本的升级</p>
+</li>
+<li><p>将当前老版本的server.xml , catalina.sh, web.xml和tomcat-users.xml进行备份，然后部署完新的tomcat后，将这些配置文件覆盖过去。</p>
+<h5 id="2-2-2-隐藏-Tomcat-版本信息"><a href="#2-2-2-隐藏-Tomcat-版本信息" class="headerlink" title="2.2.2 隐藏 Tomcat 版本信息"></a>2.2.2 隐藏 Tomcat 版本信息</h5><p>当tomcat出现404或其它错误时，就会显示当前版本信息，为避免针对某一版本的攻击，我们应该将其隐藏或伪装<br><img src="/images/tomcat_error.jpg" alt=""><br>版本信息的显示是由一个jar包控制的，该jar包存放在tomcat安装目录下的lib目录下，名称为catalina.jar<br>通过jar xf命令解压这个jar包会得到两个目录META-INF和org, 通过修改org/apache/catalina/util/ServerInfo.properties文件中的serverinfo字段来实现更改tomcat版本信息：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># cat org/apache/catalina/util/SererInfo.properties | grep -v '^$|#'</span></span><br><span class="line">server.info=Apache Tomcat/7.0.53</span><br><span class="line">server.number=7.0.53.0</span><br><span class="line">serer.built=Mar 25 2014 06:20:16</span><br></pre></td></tr></table></figure>
+<p>当然还有另外一种方法来隐藏或伪装版本信息，这两种方法本质是一样的：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">~]<span class="comment"># cd /usr/local/apache-tomcat-7.0.53/lib</span></span><br><span class="line">lib]<span class="comment"># mkdir -p org/apache/catalina/util</span></span><br><span class="line">lib]<span class="comment"># cd org/apache/catalina/util</span></span><br><span class="line">util]<span class="comment"># vim ServerInfo.properties</span></span><br><span class="line"></span><br><span class="line"> <span class="comment"># 如果想修改成其它版本号，把这个地方的值改成其它值就行了</span></span><br><span class="line">server.info=nolinux</span><br></pre></td></tr></table></figure>
+<p>修改完成之后，重启tomcat即可看到效果！</p>
+<h4 id="2-3-Tomcat-的配置优化"><a href="#2-3-Tomcat-的配置优化" class="headerlink" title="2.3 Tomcat 的配置优化"></a>2.3 Tomcat 的配置优化</h4><h5 id="2-3-1-优化-Web-xml"><a href="#2-3-1-优化-Web-xml" class="headerlink" title="2.3.1 优化 Web.xml"></a>2.3.1 优化 Web.xml</h5><p>servlet与其它适用于整个Web应用程序设置的配置文件，必须符合servlet规范的标准格式。通过它可以配置你web应用的相关选项，tomcat在启动的时候会读取这个文件，完成你开发的系统的一些初始化操作。<br>它可以做如下事情：</p>
+<ul>
+<li>提供基于servlet的相关配置</li>
+<li>增加监听器，监控session或在tomcat启动时，加载一些你希望加载的资源。比如创建数据库连接池等</li>
+<li>设置session过期时间，tomcat默认是30分钟</li>
+<li>更改应用的默认页面，通常为index.html/index.jsp等</li>
+<li>增加过滤器， 做一些你希望的过滤操作，比如敏感词汇的过滤</li>
+<li>增加一些jstl（标准标签库）的定义，方便在jsp中直接include进来</li>
+<li>struts, spring或hibernate的一些配置等<br>由于在生产环境中，tomcat不会直接对公网提供服务，前端肯定有apache或nginx，因此，默认主页或自定义错误页，我们都在前端的apache或nginx中完成；另外也有可能是由程序员在项目内的WEB-INF/web.xml中去做定义。<br>在tomcat新版本中，默认已经禁止列目录功能。<br>下面是几种觉的功能，在web.xml中的表现形式：</li>
+<li>站点默认主页：<br><img src="/images/tomcat_changeindex.jpg" alt=""></li>
+<li>自定义错误页：<br><img src="/images/tomcat_weberror.jpg" alt=""></li>
+<li>定义会话超时时间<br><img src="/images/tomcat_websession.jpg" alt=""></li>
+<li>禁止列目录：<br><img src="/images/tomcat_webdisable.jpg" alt=""><h5 id="2-3-2-Tomcat-user-xml-的优化"><a href="#2-3-2-Tomcat-user-xml-的优化" class="headerlink" title="2.3.2 Tomcat-user.xml 的优化"></a>2.3.2 Tomcat-user.xml 的优化</h5>该文件中包含用户名，角色及密码。 负责提供webapps下manager项目的登录认证管理。<br>在生产环境中，我们需要将该文件全部注释。<br><img src="/images/tomcat_userxml.jpg" alt=""><h5 id="2-3-3-优化-Server-xml"><a href="#2-3-3-优化-Server-xml" class="headerlink" title="2.3.3 优化 Server.xml"></a>2.3.3 优化 Server.xml</h5>maxThreads连接数限制：</li>
+<li><em>maxThreads是tomcat所能接受的最大连接数。 一般设置不要超过8000， 如果你的网站访问量非常大可使用多个tomcat实例的方法，即在一个服务器上启动多个tomcat，然后做负载均衡。*</em></li>
+<li><em>tomcat和php不同，php可以按照cpu和内存的情况去配置连接数，所以上万很正常。 但java还需要注意jvm的参数配置。如果不注意就会因为jvm参数过小而崩溃。*</em></li>
+</ul>
+<p>多个虚拟主机：<br><strong>强烈建议不要使用tomcat的虚拟主机功能，推荐一个tomcat实例启动一个站点。即，可以启动多个tomcat，而不是一个tomcat里包含多个虚拟主机。 因为tomcat是多线程，共享内存，任何一个虚拟主机中的应用崩溃，都会影响到所有的应用程序。</strong></p>
+<p>压缩传输：<br>Tomcat也支持gzip压缩功能。 可以在server.xml配置文件中的Connector节点中配置如下参数，来实现对指定资源类型进行压缩。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">#找到下面的代码：</span></span><br><span class="line">&lt;Connector port=<span class="string">"8080"</span> protocol=<span class="string">"HTTP/1.1"</span></span><br><span class="line">             connectionTimeout=<span class="string">"20000"</span></span><br><span class="line">             redirectPort=<span class="string">"8443"</span> /&gt;</span><br><span class="line"></span><br><span class="line"><span class="comment">#修改为：</span></span><br><span class="line">&lt;Connector port=<span class="string">"8080"</span> protocol=<span class="string">"HTTP/1.1"</span></span><br><span class="line">                    connectionTimeout=<span class="string">"20000"</span></span><br><span class="line">                    redirectPort=<span class="string">"8443"</span></span><br><span class="line">                    compression=<span class="string">"on"</span>    <span class="comment"># 打开压缩功能</span></span><br><span class="line">                    compressionMinSize=<span class="string">"50"</span>     <span class="comment"># 启用压缩的输出内容大小，默认为2KB</span></span><br><span class="line">                    noCompressionUserAgents=<span class="string">"gozilla,traviata"</span>      <span class="comment"># 对于以下的浏览器，不启用压缩</span></span><br><span class="line">                    compressableMimeType=<span class="string">"text/html,text/xml,text/javascript,application/x-javascript,application/javascript,text/css,text/plain"</span>/&gt;     <span class="comment"># 哪些资源类型需要压缩</span></span><br><span class="line"></span><br><span class="line"><span class="comment">#要注意的是，对于文本信息比如txt, html, css,javascript进行压缩，效果非常好。而对文件，图片，视频不要压缩。</span></span><br></pre></td></tr></table></figure>
+<h5 id="2-3-4-管理-AJP-端口"><a href="#2-3-4-管理-AJP-端口" class="headerlink" title="2.3.4 管理 AJP 端口"></a>2.3.4 管理 AJP 端口</h5><p>AJP是为tomcat与HTTP服务器之间通信而定制的协议，能提供较高的通信速度和效率。如果前端是apache的话，会使用到AJP这个连接器，如果是nginx，就用不上了，因此需要注销掉：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;!--</span><br><span class="line">  &lt;Connector port=<span class="string">"8009"</span> protocol=<span class="string">"AJP/1.3"</span> redirectPort=<span class="string">"8443"</span> /&gt;</span><br><span class="line">--&gt;</span><br></pre></td></tr></table></figure>
+<h5 id="2-3-5-更改关闭-Tomcat-实例的指令"><a href="#2-3-5-更改关闭-Tomcat-实例的指令" class="headerlink" title="2.3.5 更改关闭 Tomcat 实例的指令"></a>2.3.5 更改关闭 Tomcat 实例的指令</h5><p>server.xml中定义了可以直接关闭tomcat实例的管理端口。 我们通过 telnet连接上该端口之后，输入shutdown即可关闭。值得注意的是，虽然实例关闭了，但是进程还是存在的。<br>由于默认的端口和指令都很简单，默认端口是8005， 指令为SHUTDOWN. 因此我们要改得复杂一点（当然，新版本的tomcat管理端口监听在127.0.0.1）：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;Server port=<span class="string">"8005"</span> shutdown=<span class="string">"2096AAC0AA1A0F402C586D7428EF5A09"</span>&gt;</span><br></pre></td></tr></table></figure>
+<p><a href="https://passwordsgenerator.net/md5-hash-generator/" target="_blank" rel="noopener">MD5 Online</a></p>
+</li>
+</ul>
+<h5 id="2-3-6-更改-Tomcat-服务监听的端口和-Web-自动部署功能"><a href="#2-3-6-更改-Tomcat-服务监听的端口和-Web-自动部署功能" class="headerlink" title="2.3.6 更改 Tomcat 服务监听的端口和 Web 自动部署功能"></a>2.3.6 更改 Tomcat 服务监听的端口和 Web 自动部署功能</h5>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;Host name=<span class="string">"localhost"</span>  appBase=<span class="string">"webapps"</span>     <span class="comment"># name="IP" 默认监听127.0.0.1</span></span><br><span class="line">      unpackWARs=<span class="string">"true"</span> autoDeploy=<span class="string">"true"</span>&gt;    <span class="comment"># appBase="" unpackWARs和autoDeploy为是否开启Web自动部署； false of true</span></span><br></pre></td></tr></table></figure>
+<h5 id="2-3-7-禁用-Tomcat-管理页面："><a href="#2-3-7-禁用-Tomcat-管理页面：" class="headerlink" title="2.3.7 禁用 Tomcat 管理页面："></a>2.3.7 禁用 Tomcat 管理页面：</h5><p>  删除webapps目录下的所有文件，还涉及到管理页面的2个配置文件host-manager.xml和manager.xml也要删除，这两个文件在tomcat安装 目录下的conf/Catalina/localhost目录下。</p>
+<h5 id="2-3-8-使用普通用户启动tomcat-（我们之前创建的tomcat系统用户）"><a href="#2-3-8-使用普通用户启动tomcat-（我们之前创建的tomcat系统用户）" class="headerlink" title="2.3.8 使用普通用户启动tomcat  （我们之前创建的tomcat系统用户）"></a>2.3.8 使用普通用户启动tomcat  （我们之前创建的tomcat系统用户）</h5><p>  需知：在启动之前需要将tomcat安装目录下所有文件的属主和属组都设置为指定的用户。</p>
+<h3 id="三、Tomcat-生产服务器性能优化"><a href="#三、Tomcat-生产服务器性能优化" class="headerlink" title="三、Tomcat 生产服务器性能优化"></a>三、Tomcat 生产服务器性能优化</h3><h4 id="3-1-Tomcat-内存优化"><a href="#3-1-Tomcat-内存优化" class="headerlink" title="3.1 Tomcat 内存优化"></a>3.1 Tomcat 内存优化</h4><p>  Tomcat内存优化其实也就是JVM优化，启动时告诉JVM需要多大内存(调优内存是最直接的方式)。配置文件为Windows 下的 catalina.bat，Linux 下的 catalina.sh。<br>  在linux启动Tomcat通常我们会执行bin/startup.sh文件，查看该文件源码会发现，该文件最后会执行catalina.sh脚本文件。<br>  在catalina.sh脚本文件中，会看到如下注释变量释义：<br>  <img src="/images/tomcat_romup.jpg" alt=""><br>  该脚本注释说明了一些CATALINA Server的环境配置，如CATALINA_HOME、CATALINA_BASE、CATALINA_OUT、CATALINA_OPTS以及CATALINA_TMPDIR等。值得注意的是，通常建议自定义环境配置文件放在setenv.sh in CATALINA_BASE/bin。<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">conf]<span class="comment"># cd /root/usr/local/tomcat-8.5.50/bin</span></span><br><span class="line">bin]<span class="comment"># vim catalina.sh</span></span><br><span class="line"><span class="comment">#在前面加入</span></span><br><span class="line">JAVA_OPTS=<span class="string">"-server -Xms256m -Xmx2048m -XX:PermSize=256m -XX:MaxNewSize=1024m -XX:MaxPermSize=1024M"</span></span><br><span class="line"><span class="comment">#参数说明：</span></span><br><span class="line">-server           启用jdk 的 server 版；  </span><br><span class="line">-Xms              java虚拟机初始化时的最小内存；  </span><br><span class="line">-Xmx              java虚拟机可使用的最大内存；  </span><br><span class="line">-XX:PermSize      内存永久保留区域  </span><br><span class="line">-XX:MaxPermSize   内存最大永久保留区域</span><br></pre></td></tr></table></figure><br>  -Xmx 默认为物理内存的1/4， 实际建议不大于4GB；一般建议设置-Xms = -Xmx<br>  -server   一定要作为第一个参数，在多个cpu时性能 佳<br>  -Xms    初始heap大小，使用的最小内存，cpu性能 高时可以设置的大一些</p>
+<h4 id="3-2-Tomcat-线程池设置"><a href="#3-2-Tomcat-线程池设置" class="headerlink" title="3.2 Tomcat 线程池设置"></a>3.2 Tomcat 线程池设置</h4><p>  线程池指定Web请求负载的数量，因此，为获得更好的性能这部分应小心处理。可以通过调整连接器属性“maxThreads”完成设置。<br>  maxThreads的值应该根据流量的大小，如果值过低，将有没有足够的线程来处理所有的请求，请求将进入等待状态，只有当一个的处理线程释放后才被处理；如果设置的太大，Tomcat的启动将花费更多时间。因此它取决于我们给maxThreads设置一个正确的值。<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">&lt;Connector port=<span class="string">"8080"</span> address=<span class="string">"localhost"</span></span><br><span class="line">maxThreads=<span class="string">"250"</span> maxHttpHeaderSize=<span class="string">"8192"</span></span><br><span class="line">emptySessionPath=<span class="string">"true"</span> protocol=<span class="string">"HTTP/1.1"</span></span><br><span class="line">enableLookups=<span class="string">"false"</span> redirectPort=<span class="string">"8181"</span> acceptCount=<span class="string">"100"</span></span><br><span class="line">connectionTimeout=<span class="string">"20000"</span> disableUploadTimeout=<span class="string">"true"</span> /&gt;</span><br></pre></td></tr></table></figure><br>  在上述配置中，maxThreads值设定为“250”，这指定可以由服务器处理的并发请求的最大数量。如果没有指定，这个属性的默认值为“200”。<br>  任何多出的并发请求将收到“拒绝连接”的错误提示，直到另一个处理请求进程被释放。错误看起来如下:<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">org.apache.tomcat.util.threads.ThreadPool logFull SEVERE: All threads (250) are  </span><br><span class="line">currently busy, waiting. Increase maxThreads (250) or check the servlet status</span><br></pre></td></tr></table></figure><br>  如果应用提示上述错误，务必检查上述错误是否是由于单个请求花费太长时间造成的，这个问题的原因是这样的，有时候如果数据库连接不释放的话，进程将不会处理其它请求。<br>  注意: 如果请求的数量超过了“750”，这将不是意味着将maxThreads属性值设置为“750”，它意外着最好使用“Tomcat集群”的多个实例,也就是说，如果有“1000”请求，两个Tomcat实例设置“maxThreads= 500”，而不在单Tomcat实例的情况下设置maxThreads=1000。</p>
+<h4 id="3-3-Tomcat-线程优化-在server-xml中配置实例"><a href="#3-3-Tomcat-线程优化-在server-xml中配置实例" class="headerlink" title="3.3 Tomcat 线程优化 在server.xml中配置实例"></a>3.3 Tomcat 线程优化 在server.xml中配置实例</h4><p>  如下：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 优化参数</span></span><br><span class="line">&lt;Connector port=<span class="string">"8080"</span>   </span><br><span class="line">protocol=<span class="string">"HTTP/1.1"</span>   </span><br><span class="line">maxThreads=<span class="string">"1000"</span>   </span><br><span class="line">minSpareThreads=<span class="string">"100"</span>   </span><br><span class="line">acceptCount=<span class="string">"1000"</span>  </span><br><span class="line">maxConnections=<span class="string">"1000"</span>  </span><br><span class="line">connectionTimeout=<span class="string">"20000"</span>   </span><br><span class="line">maxHttpHeaderSize=<span class="string">"8192"</span>  </span><br><span class="line">tcpNoDelay=<span class="string">"true"</span>  </span><br><span class="line">compression=<span class="string">"on"</span>  </span><br><span class="line">compressionMinSize=<span class="string">"2048"</span>  </span><br><span class="line">disableUploadTimeout=<span class="string">"true"</span>  </span><br><span class="line">redirectPort=<span class="string">"8443"</span>  </span><br><span class="line">enableLookups=<span class="string">"false"</span>  </span><br><span class="line">URIEncoding=<span class="string">"UTF-8"</span> /&gt;</span><br></pre></td></tr></table></figure><br>  参数详细：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">1. protocol</span><br><span class="line">  协议类型，可选类型有4种，BIO（阻塞型IO），NIO，NIO2和APR。</span><br><span class="line">  * BIO</span><br><span class="line">  BIO(Blocking I/O) 阻塞式I/O操作，传统的Java I/O操作(即java.io包及其子包)。Tomcat在默认情况下，是以bio模式运行的，bio模式是三种运行模式中性能最低的一种。BIO配置采用默认即可。</span><br><span class="line">  BIO更适合处理简单流程，如程序处理较快可以立即返回结果。简单项目及应用可以采用BIO。</span><br><span class="line">  * NIO</span><br><span class="line">  NIO(New I/O)是Java SE 1.4及后续版本提供的一种新的I/O操作方式(即java.nio包及其子包)。</span><br><span class="line">  Java nio是一个基于缓冲区、非阻塞I/O操作的Java API它拥有比传统I/O操作(bio)更好的并发运行性能。</span><br><span class="line">  NIO更适合后台需要耗时完成请求的操作，如程序接到了请求后需要比较耗时的处理这已请求，所以无法立即返回结果。</span><br><span class="line">  这样如果采用BIO就会占用一个连接，而使用NIO后就可以将此连接转让给其他请求，直至程序处理完成返回为止。</span><br><span class="line">  * APR</span><br><span class="line">  APR(Apache Portable Runtime/Apache可移植运行时)，是Apache HTTP服务器的支持库。</span><br><span class="line">  你可以简单地理解为:Tomcat将以JNI的形式调用 Apache HTTP服务器的核心动态链接库来处理文件读取或网络传输操作，从而大大地提高 Tomcat对静态文件的处理性能。</span><br><span class="line">  APR可以大大提升Tomcat对静态文件的处理性能，同时如果你使用了HTTPS方式传输的话，也可以提升SSL的处理性能。</span><br><span class="line"><span class="comment">#修改方式：</span></span><br><span class="line">  //BIO</span><br><span class="line">  protocol=<span class="string">"HTTP/1.1"</span></span><br><span class="line">  //NIO</span><br><span class="line">  protocol=<span class="string">"org.apache.coyote.http11.Http11NioProtocol"</span></span><br><span class="line">  //NIO2</span><br><span class="line">  protocol=<span class="string">"org.apache.coyote.http11.Http11Nio2Protocol"</span></span><br><span class="line">  //APR</span><br><span class="line">  protocol=<span class="string">"org.apache.coyote.http11.Http11AprProtocol"</span></span><br><span class="line"></span><br><span class="line">2. maxThreads</span><br><span class="line">  连接器创建处理请求线程的最大数目，处理同时请求的最大数目，默认值为200。</span><br><span class="line">  如果一个执行器与此连接器关联，则忽略此属性，因为该属性将被忽略，所以该连接器将使用执行器而不是一个内部线程池来执行任务。</span><br><span class="line">  maxThreads是一个重要的配置属性，maxThreads配置的合理直接影响了Tomcat的相关性能。</span><br><span class="line">  maxThreads并不是配置的越大越好，事实上你即使配置成999999也是没有用的，因为这个最大值是受操作系统及相关硬件所制约的。</span><br><span class="line">  并且最大值并不一定是最优值，所以我们追寻的应该是最优值而不是最大值。</span><br><span class="line"></span><br><span class="line">3. minSpareThreads</span><br><span class="line">  线程的最小运行数目，这些始终保持运行(空闲线程)。如果未指定，默认值为10。</span><br><span class="line"></span><br><span class="line">4. acceptCount</span><br><span class="line">  最大队列长度，一般与maxThreads相同，默认为100。</span><br><span class="line">  当所有可能的请求处理线程都在使用时，传入连接请求的最大队列长度。如果未指定，默认值为100。</span><br><span class="line">  一般是设置的跟 maxThreads一样或一半，此值设置的过大会导致排队的请求超时而未被处理。所以这个值应该是主要根据应用的访问峰值与平均值来权衡配置。</span><br><span class="line"></span><br><span class="line">5. maxConnections</span><br><span class="line">  在任何给定的时间内，服务器将接受和处理的最大连接数。</span><br><span class="line">  当这个数字已经达到时，服务器将接受但不处理，等待进一步连接(进入队列排队)。NIO与NIO2的默认值为10000，APR默认值为8192。</span><br><span class="line"></span><br><span class="line">6. connectionTimeout</span><br><span class="line">  当请求已经被接受，但未被处理，也就是等待中的超时时间。单位为毫秒，默认值为60000。通常情况下设置为30000。</span><br><span class="line"></span><br><span class="line">7. maxHttpHeaderSize</span><br><span class="line">  请求和响应的HTTP头的最大大小，以字节为单位指定。如果没有指定，这个属性被设置为8192（8 KB）。</span><br><span class="line"></span><br><span class="line">8. tcpNoDelay</span><br><span class="line">  如果为<span class="literal">true</span>，服务器socket会设置TCP_NO_DELAY选项，在大多数情况下可以提高性能。缺省情况下设为<span class="literal">true</span>。</span><br><span class="line"></span><br><span class="line">9. compression</span><br><span class="line">  是否启用gzip压缩，默认为关闭状态。这个参数的可接受值为“off”（不使用压缩），“on”（压缩文本数据），“force”（在所有的情况下强制压缩）。</span><br><span class="line"></span><br><span class="line">10. compressionMinSize</span><br><span class="line">  如果compression=“on”，则启用此项。被压缩前数据的最小值，也就是超过这个值后才被压缩。</span><br><span class="line">  如果没有指定，这个属性默认为“2048”（2K），单位为byte。</span><br><span class="line"></span><br><span class="line">11. disableUploadTimeout</span><br><span class="line">  这个标志允许servlet Container在一个servlet执行的时候，使用一个不同的，更长的连接超时。</span><br><span class="line">  最终的结果是给servlet更长的时间以便完成其执行，或者在数据上传的时候更长的超时时间。如果没有指定，设为<span class="literal">false</span>。</span><br><span class="line"></span><br><span class="line">12. enableLookups</span><br><span class="line">  关闭DNS反向查询。</span><br></pre></td></tr></table></figure></p>
+<h4 id="3-3-Tomcat-原生库（Apache-Portable-Runtime简称APR）"><a href="#3-3-Tomcat-原生库（Apache-Portable-Runtime简称APR）" class="headerlink" title="3.3 Tomcat 原生库（Apache Portable Runtime简称APR）"></a>3.3 Tomcat 原生库（Apache Portable Runtime简称APR）</h4><p>  APR是从操作系统级别来解决异步的IO问题，大幅度的提高性能. (<a href="http://apr.apache.org/)。" target="_blank" rel="noopener">http://apr.apache.org/)。</a><br>  APR(Apache Portable Runtime)是一个高可移植库，它是Apache HTTP Server 2.x 的核心，能更好地和其它本地web技术集成，总体上让Java更有效率作为一个高性能web服务器平台而不是简单作为后台容器;<br>  在产品环境中，特别是直接使用Tomcat做WEB服务器的时候，应该使用Tomcat Native来提高其性能，如果不配APR，基本上300个线程狠快就会用满，以后的请求就只好等待.但是配上APR之后，并发的线程数量明显下降，从原来的300可能会马上下降到只有几十，新的请求会毫无阻塞的进来;<br>  在局域网环境测，就算是400个并发，也是一瞬间就处理/传输完毕，但是在真实的Internet环境下，页面处理时间只占0.1%都不到，绝大部分时间都用来页面传输，如果不用APR，一个线程同一时间只能处理一个用户，势必会造成阻塞，所以生产环境下用apr是非常必要的。<br>  安装Apache Tomcat Native Library，直接启动就支持apr(<a href="http://tomcat.apache.org/native-doc/)它本身是基于APR的，排除代码问题Tomcat优化到这个层次,可以应对大部分性能需求。" target="_blank" rel="noopener">http://tomcat.apache.org/native-doc/)它本身是基于APR的，排除代码问题Tomcat优化到这个层次,可以应对大部分性能需求。</a></p>
+<h3 id="参考链接："><a href="#参考链接：" class="headerlink" title="参考链接："></a>参考链接：</h3><p>  <a href="https://blog.51cto.com/14154700/2412180" target="_blank" rel="noopener">centos 7部署Tomcat及其负载均衡配置详解</a><br>  <a href="https://www.cnblogs.com/huangxm/p/6524968.html" target="_blank" rel="noopener">生产环境中tomcat的配置</a><br>  <a href="https://www.w3cschool.cn/cuhkj/cuhkj-yr1v266r.html" target="_blank" rel="noopener">Tomcat 生产服务器性能优化</a><br>  <a href="https://blog.csdn.net/J080624/article/details/86517618" target="_blank" rel="noopener">深入学习Tomcat服务器优化实践</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/categories/" rel="tag"># categories</a>
+              <a href="/tags/books/" rel="tag"># books</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/02/08/about_monit/" rel="prev" title="Monit 5.20.0版本安装与配置">
+      <i class="fa fa-chevron-left"></i> Monit 5.20.0版本安装与配置
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#Tomcat-运作方式"><span class="nav-text">Tomcat 运作方式:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一、Tomcat-介绍："><span class="nav-text">一、Tomcat 介绍：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-安装-Java-1-8-0-241。"><span class="nav-text">1.1 安装 Java 1.8.0_241。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-wget-官方的-Tomcat-安装包，解压安装。"><span class="nav-text">1.2 wget 官方的 Tomcat 安装包，解压安装。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-启动-Tomcat-服务并放行8080端口，HTTPS端口：8443。"><span class="nav-text">1.3 启动 Tomcat 服务并放行8080端口，HTTPS端口：8443。</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-测试访问-192-168-200-203-8080"><span class="nav-text">1.4 测试访问 192.168.200.203:8080</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、Tomcat-优化与生产环境的基础配置"><span class="nav-text">二、Tomcat 优化与生产环境的基础配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-为-Tomcat-配置环境变量与-daemon-后台运行"><span class="nav-text">2.1 为 Tomcat 配置环境变量与 daemon 后台运行</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-1-创建守护进程用户-Tomcat-，并将-usr-local-tomcat-8-5-50-目录及其文件的所有权赋予-tomcat-用户。"><span class="nav-text">2.1.1 创建守护进程用户 Tomcat ，并将 &#x2F;usr&#x2F;local&#x2F;tomcat-8.5.50 目录及其文件的所有权赋予 tomcat 用户。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-2-将tomcat配置成守护进程需要借助apache-commons-daemon项目的jsvc工具，-该工具通常包含在tomcat包中（bin-commons-daemon-native-tar-gz）。"><span class="nav-text">2.1.2 将tomcat配置成守护进程需要借助apache-commons-daemon项目的jsvc工具， 该工具通常包含在tomcat包中（bin&#x2F;commons-daemon-native.tar.gz）。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-3-更改-daemon-sh-部分内容，并测试使用-jsvc-启动-tomcat-。"><span class="nav-text">2.1.3 更改 daemon.sh 部分内容，并测试使用 jsvc 启动 tomcat 。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-4-执行-daemon-sh-，测试效果。"><span class="nav-text">2.1.4 执行 daemon.sh ，测试效果。</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-1-5-将-daemon-sh-启动脚本添加至-systemctl-服务，使其开机自启动。"><span class="nav-text">2.1.5 将 daemon.sh 启动脚本添加至 systemctl 服务，使其开机自启动。</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-Tomcat-安全配置"><span class="nav-text">2.2 Tomcat 安全配置</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-1-版本安全"><span class="nav-text">2.2.1 版本安全</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-2-2-隐藏-Tomcat-版本信息"><span class="nav-text">2.2.2 隐藏 Tomcat 版本信息</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-Tomcat-的配置优化"><span class="nav-text">2.3 Tomcat 的配置优化</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-1-优化-Web-xml"><span class="nav-text">2.3.1 优化 Web.xml</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-2-Tomcat-user-xml-的优化"><span class="nav-text">2.3.2 Tomcat-user.xml 的优化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-3-优化-Server-xml"><span class="nav-text">2.3.3 优化 Server.xml</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-4-管理-AJP-端口"><span class="nav-text">2.3.4 管理 AJP 端口</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-5-更改关闭-Tomcat-实例的指令"><span class="nav-text">2.3.5 更改关闭 Tomcat 实例的指令</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-6-更改-Tomcat-服务监听的端口和-Web-自动部署功能"><span class="nav-text">2.3.6 更改 Tomcat 服务监听的端口和 Web 自动部署功能</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-7-禁用-Tomcat-管理页面："><span class="nav-text">2.3.7 禁用 Tomcat 管理页面：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-3-8-使用普通用户启动tomcat-（我们之前创建的tomcat系统用户）"><span class="nav-text">2.3.8 使用普通用户启动tomcat  （我们之前创建的tomcat系统用户）</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、Tomcat-生产服务器性能优化"><span class="nav-text">三、Tomcat 生产服务器性能优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-Tomcat-内存优化"><span class="nav-text">3.1 Tomcat 内存优化</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-Tomcat-线程池设置"><span class="nav-text">3.2 Tomcat 线程池设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-Tomcat-线程优化-在server-xml中配置实例"><span class="nav-text">3.3 Tomcat 线程优化 在server.xml中配置实例</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-Tomcat-原生库（Apache-Portable-Runtime简称APR）"><span class="nav-text">3.3 Tomcat 原生库（Apache Portable Runtime简称APR）</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考链接："><span class="nav-text">参考链接：</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zoey Zhou"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Zoey Zhou</p>
+  <div class="site-description" itemprop="description">纸上谈来终觉浅，唯有实践出真知</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">4</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhoutao1231" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhoutao1231" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zt970421@gmail.com" title="E-Mail → mailto:zt970421@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.facebook.com/" title="FB Page → https:&#x2F;&#x2F;www.facebook.com&#x2F;" rel="noopener" target="_blank"><i class="fa fa-fw fa-facebook"></i>FB Page</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="skype:zt970421?call|chat" title="Skype → skype:zt970421?call|chat" rel="noopener" target="_blank"><i class="fa fa-fw fa-skype"></i>Skype</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      推荐阅读
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.uisdc.com/" title="http:&#x2F;&#x2F;www.uisdc.com&#x2F;" rel="noopener" target="_blank">优设</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.zhangxinxu.com/" title="http:&#x2F;&#x2F;www.zhangxinxu.com&#x2F;" rel="noopener" target="_blank">张鑫旭</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.alloyteam.com/nav/" title="http:&#x2F;&#x2F;www.alloyteam.com&#x2F;nav&#x2F;" rel="noopener" target="_blank">Web前端导航</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.36zhen.com/t?id=3448" title="http:&#x2F;&#x2F;www.36zhen.com&#x2F;t?id&#x3D;3448" rel="noopener" target="_blank">前端书籍资料</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ife.baidu.com/" title="http:&#x2F;&#x2F;ife.baidu.com&#x2F;" rel="noopener" target="_blank">百度前端技术学院</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wf.uisdc.com/cn/" title="http:&#x2F;&#x2F;wf.uisdc.com&#x2F;cn&#x2F;" rel="noopener" target="_blank">google前端开发基础</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zoey Zhou</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">22k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">20 分钟</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_pv"></span>
+</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.6.0
+  </div>   <span>| 本站已运行<span id="htmer_time"></span> | </span>
+<script>
+    function secondToDate(second) {
+        if (!second) {
+            return 0;
+        }
+        var time = new Array(0, 0, 0, 0, 0);
+        if (second >= 365 * 24 * 3600) {
+            time[0] = parseInt(second / (365 * 24 * 3600));
+            second %= 365 * 24 * 3600;
+        }
+        if (second >= 24 * 3600) {
+            time[1] = parseInt(second / (24 * 3600));
+            second %= 24 * 3600;
+        }
+        if (second >= 3600) {
+            time[2] = parseInt(second / 3600);
+            second %= 3600;
+        }
+        if (second >= 60) {
+            time[3] = parseInt(second / 60);
+            second %= 60;
+        }
+        if (second > 0) {
+            time[4] = second;
+        }
+        return time;
+    }
+    </script>
+
+<script type="text/javascript" language="javascript">
+    function setTime() {
+        var create_time = Math.round(new Date(Date.UTC(2019, 10, 20, 14, 0, 0)).getTime() / 1000);  //这里设置建站时间
+        var timestamp = Math.round((new Date().getTime() + 8 * 60 * 60 * 1000) / 1000);
+        currentTime = secondToDate((timestamp - create_time));
+        currentTimeHtml = currentTime[0] + '年' + currentTime[1] + '天'
+                + currentTime[2] + '时' + currentTime[3] + '分' + currentTime[4]
+                + '秒';
+        document.getElementById("htmer_time").innerHTML = currentTimeHtml;
+    }    setInterval(setTime, 1000);
+
+        $(function(){
+            $("#learnmore").click(function(){
+                if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
+                    var $target = $(this.hash);
+                    $target = $target.length && $target || $('[name=' + this.hash.slice(1) + ']');
+                    if ($target.length) {
+                        var targetOffset = $target.offset().top;
+                    $('html,body').animate({scrollTop: targetOffset},800);
+                    return false;
+                    }
+                }
+            });
+        });
+
+</script>
+
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">博客全站共8.6k字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = visitors.getAttribute('id').trim();
+      var title = visitors.getAttribute('data-flag-title').trim();
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.log('Failed to save visitor count', error);
+              })
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return element.getAttribute('id').trim();
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (let item of results) {
+            let { url, time } = item;
+            leancloudSelector(url).innerText = time;
+          }
+          for (let url of entries) {
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI',
+            'X-LC-Key': 'eSkiG5GatWsEOBVz8aN45297',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.8' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI',
+    appKey: 'eSkiG5GatWsEOBVz8aN45297',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname,
+    recordIP: false,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+  <!-- 自建特效存放目录 source/js/src and layout/_custom/custom.swig -->
+  
+<!-- 图片轮播js文件cdn -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-backstretch/2.0.4/jquery.backstretch.min.js"></script>
+<!-- 自定义的js文件 -->
+<script type="text/javascript" src="/js/src/custom.js"></script>
+
+
+
+  <script async src="/js/src/fireworks.js"></script>
+
+
+
+
+  <script src="/js/src/activate-power-mode.js"></script>
+  <script>
+    POWERMODE.colorful = true;
+    POWERMODE.shake = false;
+    document.body.addEventListener('input', POWERMODE);
+  </script>
+
+
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"scale":1.2,"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":300,"height":600,"hOffset":0,"vOffset":-20},"mobile":{"show":true,"scale":0.5},"react":{"opacityDefault":0.75,"opacityOnHover":0.8},"log":false});</script></body>
+</html>
