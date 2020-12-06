@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.css">
+  <link rel="stylesheet" href="/lib/pace/pace-theme-minimal.min.css">
+  <script src="/lib/pace/pace.min.js"></script>
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('http://yoursite.com').hostname,
+    root: '/',
+    scheme: 'Pisces',
+    version: '7.6.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: true,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="一、了解 WAF：1.1 什么是 WAF：  WAF是Web应用防护系统（也称：网站应用级入侵防御系统 。英文：Web Application Firewall，简称： WAF）。利用国际上公认的一种说法：Web应用 防火墙 是通过执行一系列针对HTTP&#x2F;HTTPS的 安全策略 来专门为Web应用提供保护的一款产品。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="NGINX + LUA 实现 WAF 功能">
+<meta property="og:url" content="http://yoursite.com/2020/12/05/nginx-location/index.html">
+<meta property="og:site_name" content="且听风语，淡看雨落">
+<meta property="og:description" content="一、了解 WAF：1.1 什么是 WAF：  WAF是Web应用防护系统（也称：网站应用级入侵防御系统 。英文：Web Application Firewall，简称： WAF）。利用国际上公认的一种说法：Web应用 防火墙 是通过执行一系列针对HTTP&#x2F;HTTPS的 安全策略 来专门为Web应用提供保护的一款产品。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://yoursite.com/images/nginx_wget_403.jpg">
+<meta property="og:image" content="http://yoursite.com/images/nginx_http_404.jpg">
+<meta property="og:image" content="http://yoursite.com/images/web_waf_firewalld.jpg">
+<meta property="article:published_time" content="2020-12-05T06:40:28.000Z">
+<meta property="article:modified_time" content="2020-12-06T11:35:25.065Z">
+<meta property="article:author" content="Zoey Zhou">
+<meta property="article:tag" content="categories">
+<meta property="article:tag" content="Nginx">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://yoursite.com/images/nginx_wget_403.jpg">
+
+<link rel="canonical" href="http://yoursite.com/2020/12/05/nginx-location/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>NGINX + LUA 实现 WAF 功能 | 且听风语，淡看雨落</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+    <a href="https://github.com/zhoutao1231" target="_blank" rel="noopener" class="github-corner" aria-label="View source on GitHub"><svg width="80" height="80" viewBox="0 0 250 250" style="fill:#70B7FD; color:#fff; position: absolute; top: 0; border: 0; right: 0;" aria-hidden="true"><path d="M0,0 L115,115 L130,115 L142,142 L250,250 L250,0 Z"></path><path d="M128.3,109.0 C113.8,99.7 119.0,89.6 119.0,89.6 C122.0,82.7 120.5,78.6 120.5,78.6 C119.2,72.0 123.4,76.3 123.4,76.3 C127.3,80.9 125.5,87.3 125.5,87.3 C122.9,97.6 130.6,101.9 134.4,103.2" fill="currentColor" style="transform-origin: 130px 106px;" class="octo-arm"></path><path d="M115.0,115.0 C114.9,115.1 118.7,116.5 119.8,115.4 L133.7,101.6 C136.9,99.2 139.9,98.4 142.2,98.6 C133.8,88.0 127.5,74.4 143.8,58.0 C148.5,53.4 154.0,51.2 159.7,51.0 C160.3,49.4 163.2,43.6 171.4,40.1 C171.4,40.1 176.1,42.5 178.8,56.2 C183.1,58.6 187.2,61.8 190.9,65.4 C194.5,69.0 197.7,73.2 200.1,77.6 C213.8,80.2 216.3,84.9 216.3,84.9 C212.7,93.1 206.9,96.0 205.4,96.6 C205.1,102.4 203.0,107.8 198.3,112.5 C181.9,128.9 168.3,122.5 157.7,114.1 C157.9,116.9 156.7,120.9 152.7,124.9 L141.0,136.5 C139.8,137.7 141.6,141.9 141.8,141.8 Z" fill="currentColor" class="octo-body"></path></svg></a><style>.github-corner:hover .octo-arm{animation:octocat-wave 560ms ease-in-out}@keyframes octocat-wave{0%,100%{transform:rotate(0)}20%,60%{transform:rotate(-25deg)}40%,80%{transform:rotate(10deg)}}@media (max-width:500px){.github-corner:hover .octo-arm{animation:none}.github-corner .octo-arm{animation:octocat-wave 560ms ease-in-out}}</style>
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">且听风语，淡看雨落</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">青春荒唐我不负你</p>
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/home" rel="section"><i class="fa fa-fw fa-home"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/categories/about/" rel="section"><i class="fa fa-fw fa-user"></i>关于</a>
+
+  </li>
+        <li class="menu-item menu-item-books">
+
+    <a href="/categories/books/" rel="section"><i class="fa fa-fw fa-book"></i>资料</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories" rel="section"><i class="fa fa-fw fa-th"></i>分类</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives" rel="section"><i class="fa fa-fw fa-archive"></i>归档</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404.html" rel="section"><i class="fa fa-fw fa-heartbeat"></i>公益 404</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2020/12/05/nginx-location/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="Zoey Zhou">
+      <meta itemprop="description" content="纸上谈来终觉浅，唯有实践出真知">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="且听风语，淡看雨落">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          NGINX + LUA 实现 WAF 功能
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2020-12-05 14:40:28" itemprop="dateCreated datePublished" datetime="2020-12-05T14:40:28+08:00">2020-12-05</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2020-12-06 19:35:25" itemprop="dateModified" datetime="2020-12-06T19:35:25+08:00">2020-12-06</time>
+              </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/books/" itemprop="url" rel="index">
+                    <span itemprop="name">books</span>
+                  </a>
+                </span>
+                  ，
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/books/Nginx/" itemprop="url" rel="index">
+                    <span itemprop="name">Nginx</span>
+                  </a>
+                </span>
+            </span>
+
+          
+            <span id="/2020/12/05/nginx-location/" class="post-meta-item leancloud_visitors" data-flag-title="NGINX + LUA 实现 WAF 功能" title="阅读次数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span class="leancloud-visitors-count"></span>
+            </span>
+            <span class="post-meta-item" title="阅读次数" id="busuanzi_container_page_pv" style="display: none;">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-eye"></i>
+              </span>
+              <span class="post-meta-item-text">阅读次数：</span>
+              <span id="busuanzi_value_page_pv"></span>
+            </span>
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Valine：</span>
+    
+    <a title="valine" href="/2020/12/05/nginx-location/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count valine-comment-count" data-xid="/2020/12/05/nginx-location/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-file-word-o"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>5.4k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-clock-o"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>5 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h3 id="一、了解-WAF："><a href="#一、了解-WAF：" class="headerlink" title="一、了解 WAF："></a>一、了解 WAF：</h3><h4 id="1-1-什么是-WAF："><a href="#1-1-什么是-WAF：" class="headerlink" title="1.1 什么是 WAF："></a>1.1 什么是 WAF：</h4><p>  WAF是Web应用防护系统（也称：网站应用级入侵防御系统 。英文：Web Application Firewall，简称： WAF）。利用国际上公认的一种说法：Web应用 防火墙 是通过执行一系列针对HTTP/HTTPS的 安全策略 来专门为Web应用提供保护的一款产品。<a id="more"></a></p>
+<h4 id="1-2-WAF-的功能："><a href="#1-2-WAF-的功能：" class="headerlink" title="1.2 WAF 的功能："></a>1.2 WAF 的功能：</h4><ul>
+<li>支持IP白名单和黑名单功能，直接将黑名单的IP访问拒绝。</li>
+<li>支持URL白名单，将不需要过滤的URL进行定义。</li>
+<li>支持User-Agent的过滤，匹配自定义规则中的条目，然后进行处理（返回403）。</li>
+<li>支持CC攻击防护，单个URL指定时间的访问次数，超过设定值，直接返回403。</li>
+<li>支持Cookie过滤，匹配自定义规则中的条目，然后进行处理（返回403）。</li>
+<li>支持URL过滤，匹配自定义规则中的条目，如果用户请求的URL包含这些，返回403。</li>
+<li>支持URL参数过滤，原理同上。</li>
+<li>支持日志记录，将所有拒绝的操作，记录到日志中去。</li>
+</ul>
+<h4 id="1-3-WAF-的特点："><a href="#1-3-WAF-的特点：" class="headerlink" title="1.3 WAF 的特点："></a>1.3 WAF 的特点：</h4><ul>
+<li><p>异常检测协议<br>Web应用防火墙会对HTTP的请求进行异常检测，拒绝不符合HTTP标准的请求。并且，它也可以只允许HTTP协议的部分选项通过，从而减少攻击的影响范围。甚至，一些Web应用防火墙还可以严格限定HTTP协议中那些过于松散或未被完全制定的选项。</p>
+</li>
+<li><p>增强的输入验证<br>增强输入验证，可以有效防止网页篡改、信息泄露、木马植入等恶意网络入侵行为。从而减小Web服务器被攻击的可能性。</p>
+</li>
+<li><p>及时补丁<br>修补Web安全漏洞，是Web应用开发者最头痛的问题，没人会知道下一秒有什么样的漏洞出现，会为Web应用带来什么样的危害。WAF可以为我们做这项工作了——只要有全面的漏洞信息WAF能在不到一个小时的时间内屏蔽掉这个漏洞。当然，这种屏蔽掉漏洞的方式不是非常完美的，并且没有安装对应的补丁本身就是一种安全威胁，但我们在没有选择的情况下，任何保护措施都比没有保护措施更好。</p>
+</li>
+<li><p>基于规则的保护和基于异常的保护<br>基于规则的保护可以提供各种Web应用的安全规则，WAF生产商会维护这个规则库，并时时为其更新。用户可以按照这些规则对应用进行全方面检测。还有的产品可以基于合法应用数据建立模型，并以此为依据判断应用数据的异常。但这需要对用户企业的应用具有十分透彻的了解才可能做到，可现实中这是十分困难的一件事情。</p>
+</li>
+<li><p>状态管理<br>WAF能够判断用户是否是第一次访问并且将请求重定向到默认登录页面并且记录事件。通过检测用户的整个操作行为我们可以更容易识别攻击。状态管理模式还能检测出异常事件（比如登陆失败），并且在达到极限值时进行处理。这对暴力攻击的识别和响应是十分有利的。</p>
+</li>
+<li><p>其他防护技术<br>WAF还有一些安全增强的功能，可以用来解决WEB程序员过分信任输入数据带来的问题。比如：隐藏表单域保护、抗入侵规避技术、响应监视和信息泄露保护。</p>
+</li>
+</ul>
+<h4 id="1-4-WAF-与网络防火墙的区别"><a href="#1-4-WAF-与网络防火墙的区别" class="headerlink" title="1.4 WAF 与网络防火墙的区别"></a>1.4 WAF 与网络防火墙的区别</h4><p>　　网络防火墙作为访问控制设备，主要工作在OSI模型三、四层，基于IP报文进行检测。只是对端口做限制，对TCP协议做封堵。其产品设计无需理解HTTP会话，也就决定了无法理解Web应用程序语言如HTML、SQL语言。因此，它不可能对HTTP通讯进行输入验证或攻击规则分析。针对Web网站的恶意攻击绝大部分都将封装为HTTP请求，从80或443端口顺利通过防火墙检测。<br>　　一些定位比较综合、提供丰富功能的防火墙，也具备一定程度的应用层防御能力，如能根据TCP会话异常性及攻击特征阻止网络层的攻击，通过IP分拆和组合也能判断是否有攻击隐藏在多个数据包中，但从根本上说他仍然无法理解HTTP会话，难以应对如SQL注入、跨站脚本、cookie窃取、网页篡改等应用层攻击。<br>　　web应用防火墙能在应用层理解分析HTTP会话，因此能有效的防止各类应用层攻击，同时他向下兼容，具备网络防火墙的功能。</p>
+<h3 id="二、使用-Nginx-配置简单实现-403-和-404"><a href="#二、使用-Nginx-配置简单实现-403-和-404" class="headerlink" title="二、使用 Nginx 配置简单实现 403 和 404"></a>二、使用 Nginx 配置简单实现 403 和 404</h3><h4 id="2-1-小试身手之-return-403"><a href="#2-1-小试身手之-return-403" class="headerlink" title="2.1 小试身手之 return 403"></a>2.1 小试身手之 return 403</h4><p>  修改nginx配置文件在server中加入以下内容:<br>  <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">set $block_user_agent 0;</span><br><span class="line">  if ($http_user_agent ~ &quot;Wget|AgentBench&quot;)&#123;</span><br><span class="line">    set $block_user_agent 1;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  if ($block_user_agent &#x3D; 1)&#123;</span><br><span class="line">    return 403;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<p>  通过其他机器去wget，结果如下：<br>  <img src="/images/nginx_wget_403.jpg" alt=""></p>
+<h4 id="2-2-小试身手之rerurn-404"><a href="#2-2-小试身手之rerurn-404" class="headerlink" title="2.2 小试身手之rerurn 404"></a>2.2 小试身手之rerurn 404</h4><p>  在nginx配置文件中加入如下内容，让访问 sql|bak|zip|tgz|tar.gz 的请求返回404<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">location ~* <span class="string">"\.(sql|bak|zip|tgz|tar.gz)$"</span>&#123;</span><br><span class="line">  <span class="built_in">return</span> 404;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure><br>  通过浏览器访问结果如下，404已生效<br>  <img src="/images/nginx_http_404.jpg" alt=""></p>
+<h3 id="三、深入实现-WAF"><a href="#三、深入实现-WAF" class="headerlink" title="三、深入实现 WAF"></a>三、深入实现 WAF</h3><h4 id="3-1-WAF-实现规则"><a href="#3-1-WAF-实现规则" class="headerlink" title="3.1 WAF 实现规则"></a>3.1 WAF 实现规则</h4><p>  分析步骤如下：解析HTTP请求 –&gt; 匹配规则防御动作 –&gt; 记录日志<br>  具体实现如下：</p>
+<ul>
+<li>解析http请求：协议解析模块</li>
+<li>匹配规则：规则检测模块，匹配规则库</li>
+<li>防御动作：return 403 或者跳转到自定义界面</li>
+<li>日志记录：记录到elk中，画出饼图，建议使用json格式<h4 id="3-2-安装-Nginx-Lua"><a href="#3-2-安装-Nginx-Lua" class="headerlink" title="3.2 安装 Nginx + Lua"></a>3.2 安装 Nginx + Lua</h4>由于nginx配置文件书写不方便，并且实现白名单功能很复杂，nginx的白名单也不适用于CC攻击，所以在这里使用nginx+lua来实现WAF，如果想使用lua，须在编译nginx的时候配置上lua，或者结合OpenResty使用,此方法不需要编译nginx时候指定lua。</li>
+</ul>
+<h5 id="3-2-1-编译-Nginx-的时候加载-Lua"><a href="#3-2-1-编译-Nginx-的时候加载-Lua" class="headerlink" title="3.2.1 编译 Nginx 的时候加载 Lua"></a>3.2.1 编译 Nginx 的时候加载 Lua</h5><p>  环境准备：Nginx安装必备的Nginx和PCRE软件包。<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">wget https://nginx.org/download/nginx-1.16.1.tar.gz</span><br><span class="line">wget https://ftp.pcre.org/pub/pcre/pcre-8.01.tar.gz</span><br></pre></td></tr></table></figure><br>  下载当前最新的 luajit、ngx_devel_kit (NDK)、lua-nginx-module<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> /usr/<span class="built_in">local</span>/src</span><br><span class="line">wget https://luajit.org/download/LuaJIT-2.0.5.tar.gz</span><br><span class="line">wget https://github.com/simplresty/ngx_devel_kit/archive/v0.3.0.tar.gz</span><br><span class="line">wget https://github.com/openresty/lua-nginx-module/archive/v0.10.19.tar.gz</span><br></pre></td></tr></table></figure><br>  创建Nginx运行的普通用户<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd -s /bin/nologin -M www</span><br></pre></td></tr></table></figure><br>  解压NDK和lua-nginx-module<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar -zxf v0.3.0.tar.gz &amp;&amp; tar -zxf v0.10.19.tar.gz &amp;&amp; tar -zxf pcre-8.01.tar.gz</span><br></pre></td></tr></table></figure><br>  安装 LuaJIT LuaJIT是Lua即时编译器<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">tar -zxf LuaJIT-2.0.5.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> LuaJIT-2.0.5</span><br><span class="line"></span><br><span class="line">make &amp;&amp; make install</span><br><span class="line"></span><br><span class="line">ln -s /usr/<span class="built_in">local</span>/lib/libluajit-5.1.so.2 /lib64/libluajit-5.1.so.2   <span class="comment">#一定创建此软连接，否则报错</span></span><br></pre></td></tr></table></figure><br>  安装 Nginx 并加载模块<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">tar -zxf nginx-1.16.1.tar.gz</span><br><span class="line"></span><br><span class="line"><span class="built_in">cd</span> nginx-1.16.1</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"export LUAJIT_LIB=/usr/local/lib"</span> &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line"><span class="built_in">echo</span> <span class="string">"export LUAJIT_INC=/usr/local/include/luajit-2.0"</span> &gt;&gt; /etc/profile</span><br><span class="line"></span><br><span class="line"><span class="built_in">source</span> /etc/profile</span><br><span class="line"></span><br><span class="line">./configure --prefix=/usr/<span class="built_in">local</span>/nginx --user=www --group=www --with-http_ssl_module --with-http_stub_status_module --with-file-aio --with-http_dav_module --add-module=/root/ngx_devel_kit-0.3.0/ --add-module=/root/lua-nginx-module-0.10.19/ --with-pcre=/usr/<span class="built_in">local</span>/src/pcre-8.01</span><br><span class="line"></span><br><span class="line">make j2 &amp;&amp; make install</span><br><span class="line"></span><br><span class="line">ln -s /usr/<span class="built_in">local</span>/nginx-1.16.1 /usr/<span class="built_in">local</span>/nginx</span><br></pre></td></tr></table></figure><br>  新建 /usr/local/nginx/logs/hack/ 攻击日志目录，并赋予nginx用户对该目录的写入权限。<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">mkdir -p /usr/<span class="built_in">local</span>/nginx/logs/hack/</span><br><span class="line">chown -R www.www /usr/<span class="built_in">local</span>/nginx/logs/hack/</span><br><span class="line">chmod -R 755 /usr/<span class="built_in">local</span>/nginx/logs/hack/</span><br></pre></td></tr></table></figure></p>
+<h5 id="3-2-2-配置-WAF"><a href="#3-2-2-配置-WAF" class="headerlink" title="3.2.2 配置 WAF"></a>3.2.2 配置 WAF</h5><p>  获取 ngx_lua_waf，将其解压至 Nginx conf 目录下并修改文件名为 waf<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget https://github.com/loveshell/ngx_lua_waf/archive/master.zip</span><br><span class="line">unzip master.zip -d /usr/<span class="built_in">local</span>/nginx/conf/</span><br><span class="line">mv /usr/<span class="built_in">local</span>/nginx/conf/ngx_lua_waf-master /usr/<span class="built_in">local</span>/nginx/conf/waf</span><br></pre></td></tr></table></figure><br>  在 nginx.conf 的 http 段添加下面这段：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">lua_package_path <span class="string">"/usr/local/nginx/conf/waf/?.lua"</span>;</span><br><span class="line">lua_shared_dict <span class="built_in">limit</span> 10m;</span><br><span class="line">init_by_lua_file  /usr/<span class="built_in">local</span>/nginx/conf/waf/init.lua;</span><br><span class="line">access_by_lua_file /usr/<span class="built_in">local</span>/nginx/conf/waf/waf.lua;</span><br></pre></td></tr></table></figure><br>  配置 config.lua 里的 waf 规则目录(一般在waf/conf/目录下)：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RulePath = <span class="string">"/usr/local/nginx/conf/waf/wafconf/"</span>   <span class="comment">#绝对路径如有变动，需对应修改</span></span><br></pre></td></tr></table></figure></p>
+<h5 id="3-2-3-WAF-config-lua-参数注释"><a href="#3-2-3-WAF-config-lua-参数注释" class="headerlink" title="3.2.3 WAF config.lua 参数注释"></a>3.2.3 WAF config.lua 参数注释</h5><p>  参数详解：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">RulePath = <span class="string">"/usr/local/nginx/conf/waf/wafconf/"</span></span><br><span class="line">  --规则存放目录</span><br><span class="line">  attacklog = <span class="string">"off"</span></span><br><span class="line">  --是否开启攻击信息记录，需要配置logdir</span><br><span class="line">  logdir = <span class="string">"/usr/local/nginx/logs/hack/"</span></span><br><span class="line">  --<span class="built_in">log</span>存储目录，该目录需要用户自己新建，切需要nginx用户的可写权限</span><br><span class="line">  UrlDeny=<span class="string">"on"</span></span><br><span class="line">  --是否拦截url访问</span><br><span class="line">  Redirect=<span class="string">"on"</span></span><br><span class="line">  --是否拦截后重定向</span><br><span class="line">  CookieMatch = <span class="string">"on"</span></span><br><span class="line">  --是否拦截cookie攻击</span><br><span class="line">  postMatch = <span class="string">"on"</span></span><br><span class="line">  --是否拦截post攻击</span><br><span class="line">  whiteModule = <span class="string">"on"</span></span><br><span class="line">  --是否开启URL白名单</span><br><span class="line">  black_fileExt=&#123;<span class="string">"php"</span>,<span class="string">"jsp"</span>&#125;</span><br><span class="line">  --填写不允许上传文件后缀类型</span><br><span class="line">  ipWhitelist=&#123;<span class="string">"127.0.0.1"</span>,<span class="string">"192.168.200.0/24"</span>&#125;</span><br><span class="line">  --ip白名单，多个ip用逗号分隔</span><br><span class="line">  ipBlocklist=&#123;<span class="string">"1.0.0.1"</span>&#125;</span><br><span class="line">  --ip黑名单，多个ip用逗号分隔</span><br><span class="line">  CCDeny=<span class="string">"on"</span></span><br><span class="line">  --是否开启拦截cc攻击(需要nginx.conf的http段增加lua_shared_dict <span class="built_in">limit</span> 10m;)</span><br><span class="line">  CCrate = <span class="string">"100/60"</span></span><br><span class="line">  --设置cc攻击频率，单位为秒.</span><br><span class="line">  --默认1分钟同一个IP只能请求同一个地址100次</span><br><span class="line">  html=[[Please go away~~]]</span><br><span class="line">  --警告内容,可在中括号内自定义</span><br><span class="line">  备注:不要乱动双引号，区分大小写</span><br></pre></td></tr></table></figure><br>  测试并启动 Nginx：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">nginx -t &amp;&amp; nginx</span><br></pre></td></tr></table></figure><br>  检测规则是否生效：<br>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl http://your_ip/test.php?id=../etc/passwd</span><br></pre></td></tr></table></figure><br>  结果如下则说明规则生效(页面修改地址：/usr/local/nginx/conf/waf/config.lua )<br>  <img src="/images/web_waf_firewalld.jpg" alt=""><br>  注意:默认，本机在白名单不过滤，可自行调整config.lua配置</p>
+<h5 id="3-2-4-一些说明"><a href="#3-2-4-一些说明" class="headerlink" title="3.2.4 一些说明"></a>3.2.4 一些说明</h5>  <figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">过滤规则在wafconf下，可根据需求自行调整，每条规则需换行,或者用|分割</span><br><span class="line"></span><br><span class="line">args里面的规则get参数进行过滤的</span><br><span class="line">url是只在get请求url过滤的规则        </span><br><span class="line">post是只在post请求过滤的规则        </span><br><span class="line">whitelist是白名单，里面的url匹配到不做过滤        </span><br><span class="line">user-agent是对user-agent的过滤规则</span><br><span class="line"></span><br><span class="line">默认开启了get和post过滤，需要开启cookie过滤的，编辑waf.lua取消部分--注释即可</span><br><span class="line">日志文件名称格式如下:虚拟主机名_sec.log</span><br></pre></td></tr></table></figure>
+<h3 id="四、转载链接"><a href="#四、转载链接" class="headerlink" title="四、转载链接"></a>四、转载链接</h3><p>  <a href="https://www.centos.bz/2017/10/nginxnginx_lua%E5%AE%9E%E7%8E%B0waf%E9%98%B2%E6%8A%A4%E5%8A%9F%E8%83%BD/" target="_blank" rel="noopener">nginx+nginx_lua实现WAF防护功能</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/categories/" rel="tag"># categories</a>
+              <a href="/tags/Nginx/" rel="tag"># Nginx</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/03/23/Elasticsearch-install/" rel="prev" title="爬过一个个部署ELk的坑">
+      <i class="fa fa-chevron-left"></i> 爬过一个个部署ELk的坑
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    <div class="comments" id="comments"></div>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#一、了解-WAF："><span class="nav-text">一、了解 WAF：</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-什么是-WAF："><span class="nav-text">1.1 什么是 WAF：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-WAF-的功能："><span class="nav-text">1.2 WAF 的功能：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-WAF-的特点："><span class="nav-text">1.3 WAF 的特点：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-WAF-与网络防火墙的区别"><span class="nav-text">1.4 WAF 与网络防火墙的区别</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#二、使用-Nginx-配置简单实现-403-和-404"><span class="nav-text">二、使用 Nginx 配置简单实现 403 和 404</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-小试身手之-return-403"><span class="nav-text">2.1 小试身手之 return 403</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-小试身手之rerurn-404"><span class="nav-text">2.2 小试身手之rerurn 404</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#三、深入实现-WAF"><span class="nav-text">三、深入实现 WAF</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-WAF-实现规则"><span class="nav-text">3.1 WAF 实现规则</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-安装-Nginx-Lua"><span class="nav-text">3.2 安装 Nginx + Lua</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-1-编译-Nginx-的时候加载-Lua"><span class="nav-text">3.2.1 编译 Nginx 的时候加载 Lua</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-2-配置-WAF"><span class="nav-text">3.2.2 配置 WAF</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-3-WAF-config-lua-参数注释"><span class="nav-text">3.2.3 WAF config.lua 参数注释</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3-2-4-一些说明"><span class="nav-text">3.2.4 一些说明</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#四、转载链接"><span class="nav-text">四、转载链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Zoey Zhou"
+      src="/images/avatar.png">
+  <p class="site-author-name" itemprop="name">Zoey Zhou</p>
+  <div class="site-description" itemprop="description">纸上谈来终觉浅，唯有实践出真知</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+        
+          <span class="site-state-item-count">7</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">分类</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-name">标签</span>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/zhoutao1231" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;zhoutao1231" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:zt970421@gmail.com" title="E-Mail → mailto:zt970421@gmail.com" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="https://www.facebook.com/" title="FB Page → https:&#x2F;&#x2F;www.facebook.com&#x2F;" rel="noopener" target="_blank"><i class="fa fa-fw fa-facebook"></i>FB Page</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="skype:zt970421?call|chat" title="Skype → skype:zt970421?call|chat" rel="noopener" target="_blank"><i class="fa fa-fw fa-skype"></i>Skype</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="/atom.xml" title="RSS → &#x2F;atom.xml"><i class="fa fa-fw fa-rss"></i>RSS</a>
+      </span>
+  </div>
+
+
+  <div class="links-of-blogroll motion-element">
+    <div class="links-of-blogroll-title">
+      <i class="fa fa-fw fa-link"></i>
+      推荐阅读
+    </div>
+    <ul class="links-of-blogroll-list">
+        <li class="links-of-blogroll-item">
+          <a href="http://www.uisdc.com/" title="http:&#x2F;&#x2F;www.uisdc.com&#x2F;" rel="noopener" target="_blank">优设</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.zhangxinxu.com/" title="http:&#x2F;&#x2F;www.zhangxinxu.com&#x2F;" rel="noopener" target="_blank">张鑫旭</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.alloyteam.com/nav/" title="http:&#x2F;&#x2F;www.alloyteam.com&#x2F;nav&#x2F;" rel="noopener" target="_blank">Web前端导航</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://www.36zhen.com/t?id=3448" title="http:&#x2F;&#x2F;www.36zhen.com&#x2F;t?id&#x3D;3448" rel="noopener" target="_blank">前端书籍资料</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://ife.baidu.com/" title="http:&#x2F;&#x2F;ife.baidu.com&#x2F;" rel="noopener" target="_blank">百度前端技术学院</a>
+        </li>
+        <li class="links-of-blogroll-item">
+          <a href="http://wf.uisdc.com/cn/" title="http:&#x2F;&#x2F;wf.uisdc.com&#x2F;cn&#x2F;" rel="noopener" target="_blank">google前端开发基础</a>
+        </li>
+    </ul>
+  </div>
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zoey Zhou</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    <span title="站点总字数">61k</span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    <span title="站点阅读时长">56 分钟</span>
+</div>
+
+<div class="powered-by">
+<i class="fa fa-user-md"></i><span id="busuanzi_container_site_uv">
+  本站访客数:<span id="busuanzi_value_site_pv"></span>
+</span>
+</div>
+  <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> 强力驱动 v4.2.0
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">主题 – <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> v7.6.0
+  </div>   <span>| 本站已运行<span id="htmer_time"></span> | </span>
+<script>
+    function secondToDate(second) {
+        if (!second) {
+            return 0;
+        }
+        var time = new Array(0, 0, 0, 0, 0);
+        if (second >= 365 * 24 * 3600) {
+            time[0] = parseInt(second / (365 * 24 * 3600));
+            second %= 365 * 24 * 3600;
+        }
+        if (second >= 24 * 3600) {
+            time[1] = parseInt(second / (24 * 3600));
+            second %= 24 * 3600;
+        }
+        if (second >= 3600) {
+            time[2] = parseInt(second / 3600);
+            second %= 3600;
+        }
+        if (second >= 60) {
+            time[3] = parseInt(second / 60);
+            second %= 60;
+        }
+        if (second > 0) {
+            time[4] = second;
+        }
+        return time;
+    }
+    </script>
+
+<script type="text/javascript" language="javascript">
+    function setTime() {
+        var create_time = Math.round(new Date(Date.UTC(2019, 10, 20, 14, 0, 0)).getTime() / 1000);  //这里设置建站时间
+        var timestamp = Math.round((new Date().getTime() + 8 * 60 * 60 * 1000) / 1000);
+        currentTime = secondToDate((timestamp - create_time));
+        currentTimeHtml = currentTime[0] + '年' + currentTime[1] + '天'
+                + currentTime[2] + '时' + currentTime[3] + '分' + currentTime[4]
+                + '秒';
+        document.getElementById("htmer_time").innerHTML = currentTimeHtml;
+    }    setInterval(setTime, 1000);
+
+        $(function(){
+            $("#learnmore").click(function(){
+                if (location.pathname.replace(/^\//, '') == this.pathname.replace(/^\//, '') && location.hostname == this.hostname) {
+                    var $target = $(this.hash);
+                    $target = $target.length && $target || $('[name=' + this.hash.slice(1) + ']');
+                    if ($target.length) {
+                        var targetOffset = $target.offset().top;
+                    $('html,body').animate({scrollTop: targetOffset},800);
+                    return false;
+                    }
+                }
+            });
+        });
+
+</script>
+
+
+<div class="theme-info">
+  <div class="powered-by"></div>
+  <span class="post-count">博客全站共20.2k字</span>
+</div>
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <span class="post-meta-item" id="busuanzi_container_site_uv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-user"></i>
+      </span>
+      <span class="site-uv" title="总访客量">
+        <span id="busuanzi_value_site_uv"></span>
+      </span>
+    </span>
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item" id="busuanzi_container_site_pv" style="display: none;">
+      <span class="post-meta-item-icon">
+        <i class="fa fa-eye"></i>
+      </span>
+      <span class="site-pv" title="总访问量">
+        <span id="busuanzi_value_site_pv"></span>
+      </span>
+    </span>
+</div>
+
+
+
+
+
+
+  <script>
+  function leancloudSelector(url) {
+    return document.getElementById(url).querySelector('.leancloud-visitors-count');
+  }
+  if (CONFIG.page.isPost) {
+    function addCount(Counter) {
+      var visitors = document.querySelector('.leancloud_visitors');
+      var url = visitors.getAttribute('id').trim();
+      var title = visitors.getAttribute('data-flag-title').trim();
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length > 0) {
+            var counter = results[0];
+            Counter('put', '/classes/Counter/' + counter.objectId, { time: { '__op': 'Increment', 'amount': 1 } })
+              .then(response => response.json())
+              .then(() => {
+                leancloudSelector(url).innerText = counter.time + 1;
+              })
+              .catch(error => {
+                console.log('Failed to save visitor count', error);
+              })
+          } else {
+              leancloudSelector(url).innerText = 'Counter not initialized! More info at console err msg.';
+              console.error('ATTENTION! LeanCloud counter has security bug, see how to solve it here: https://github.com/theme-next/hexo-leancloud-counter-security. \n However, you can still use LeanCloud without security, by setting `security` option to `false`.');
+            
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  } else {
+    function showTime(Counter) {
+      var visitors = document.querySelectorAll('.leancloud_visitors');
+      var entries = [...visitors].map(element => {
+        return element.getAttribute('id').trim();
+      });
+
+      Counter('get', `/classes/Counter?where=${JSON.stringify({ url: { '$in': entries } })}`)
+        .then(response => response.json())
+        .then(({ results }) => {
+          if (results.length === 0) {
+            document.querySelectorAll('.leancloud_visitors .leancloud-visitors-count').forEach(element => {
+              element.innerText = 0;
+            });
+            return;
+          }
+          for (let item of results) {
+            let { url, time } = item;
+            leancloudSelector(url).innerText = time;
+          }
+          for (let url of entries) {
+            var element = leancloudSelector(url);
+            if (element.innerText == '') {
+              element.innerText = 0;
+            }
+          }
+        })
+        .catch(error => {
+          console.log('LeanCloud Counter Error', error);
+        });
+    }
+  }
+
+  fetch('https://app-router.leancloud.cn/2/route?appId=JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI')
+    .then(response => response.json())
+    .then(({ api_server }) => {
+      var Counter = (method, url, data) => {
+        return fetch(`https://${api_server}/1.1${url}`, {
+          method: method,
+          headers: {
+            'X-LC-Id': 'JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI',
+            'X-LC-Key': 'eSkiG5GatWsEOBVz8aN45297',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data)
+        });
+      };
+      if (CONFIG.page.isPost) {
+        if (CONFIG.hostname !== location.hostname) return;
+        addCount(Counter);
+      } else if (document.querySelectorAll('.post-title-link').length >= 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+  
+  <script color='0,0,0' opacity='0.8' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script src="//cdn.jsdelivr.net/gh/fancyapps/fancybox@3/dist/jquery.fancybox.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+
+<script>
+NexT.utils.getScript('//unpkg.com/valine/dist/Valine.min.js', () => {
+  var GUEST = ['nick', 'mail', 'link'];
+  var guest = 'nick,mail,link';
+  guest = guest.split(',').filter(item => {
+    return GUEST.includes(item);
+  });
+  new Valine({
+    el: '#comments',
+    verify: false,
+    notify: false,
+    appId: 'JX2cVSIs1yxlbkUMagQzzMAB-MdYXbMMI',
+    appKey: 'eSkiG5GatWsEOBVz8aN45297',
+    placeholder: "Just go go",
+    avatar: 'retro',
+    meta: guest,
+    pageSize: '10' || 10,
+    visitor: false,
+    lang: '' || 'zh-cn',
+    path: location.pathname,
+    recordIP: false,
+    serverURLs: ''
+  });
+}, window.Valine);
+</script>
+
+  <!-- 自建特效存放目录 source/js/src and layout/_custom/custom.swig -->
+  
+<!-- 图片轮播js文件cdn -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-backstretch/2.0.4/jquery.backstretch.min.js"></script>
+<!-- 自定义的js文件 -->
+<script type="text/javascript" src="/js/src/custom.js"></script>
+
+
+
+  <script async src="/js/src/fireworks.js"></script>
+
+
+
+
+  <script src="/js/src/activate-power-mode.js"></script>
+  <script>
+    POWERMODE.colorful = true;
+    POWERMODE.shake = false;
+    document.body.addEventListener('input', POWERMODE);
+  </script>
+
+
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?094cbace49a39548bed64abff5988b05"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"scale":1.2,"jsonPath":"/live2dw/assets/shizuku.model.json"},"display":{"position":"left","width":300,"height":600,"hOffset":0,"vOffset":-20},"mobile":{"show":true,"scale":0.5},"react":{"opacityDefault":0.75,"opacityOnHover":0.8},"log":false});</script></body>
+</html>
